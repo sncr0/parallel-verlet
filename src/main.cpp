@@ -1,8 +1,8 @@
 // main.cpp
 
 #include "system/System.h"
-// #include "context/Context.h"
-// #include "integrator/VerletIntegrator.h"
+#include "context/Context.h"
+#include "integrator/VerletIntegrator.h"
 #include <iostream>
 
 int main() {
@@ -10,11 +10,11 @@ int main() {
     system.addParticle(1.0, 0.0, 0.0, 0.0);
     system.addParticle(1.0, 1.0, 1.0, 1.0);
 
-    // VerletIntegrator integrator(0.01);
-    // Context context(system, integrator);
+    VerletIntegrator integrator(0.01);
+    Context context(system, integrator);
 
-    // // Run the simulation
-    // context.runSimulation(10);
+    // Run the simulation
+    context.runSimulation(10);
 
     // Output the final positions of particles
     for (size_t i = 0; i < system.getNumParticles(); ++i) {
