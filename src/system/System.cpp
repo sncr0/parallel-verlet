@@ -7,7 +7,7 @@ System::System() {}
 System::~System() {}
 
 void System::addParticle(double mass, double x, double y, double z) {
-    particles.emplace_back(mass, x, y, z);
+    particles.emplace_back(mass, x, y, z, 0, 0, 0);
 }
 
 size_t System::getNumParticles() const {

@@ -4,8 +4,22 @@
 #include "context/Context.h"
 #include "integrator/VerletIntegrator.h"
 #include <iostream>
+#include "getopt.h"
+#include "logging/Verbose.h"
 
-int main() {
+
+
+int main(int argc, char **argv) {
+    int c;
+    while ((c = getopt(argc,argv,"v")) != -1 ){
+        switch(c) {
+            case 'v':
+                setVerboseFlag(1);
+                break;
+        }
+    }
+
+
     System system;
     system.addParticle(1.0, 0.0, 0.0, 0.0);
     system.addParticle(1.0, 1.0, 1.0, 1.0);
@@ -13,8 +27,10 @@ int main() {
     VerletIntegrator integrator(0.01);
     Context context(system, integrator);
 
+    VERBOSE("Starting the simulation with %zu particles\n", system.getNumParticles());
+
     // Run the simulation
-    context.runSimulation(10);
+    context.runSimulation(100000);
 
     // Output the final positions of particles
     for (size_t i = 0; i < system.getNumParticles(); ++i) {
