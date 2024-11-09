@@ -1,0 +1,19 @@
+// system/System.cpp
+
+#include "System.h"
+
+System::System() {}
+
+System::~System() {}
+
+void System::addParticle(double mass, double x, double y, double z) {
+    particles.emplace_back(mass, x, y, z);
+}
+
+size_t System::getNumParticles() const {
+    return particles.size();
+}
+
+Particle& System::getParticle(size_t index) {
+    return particles.at(index);
+}
