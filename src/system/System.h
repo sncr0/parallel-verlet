@@ -14,7 +14,9 @@ public:
     
     void addParticle(double mass, double x, double y, double z);
     size_t getNumParticles() const;
-    Particle& getParticle(size_t index);
+    Particle& getParticle(size_t index);    
+    const Particle& getParticle(size_t index) const;
+
 
 private:
     std::vector<Particle> particles;
