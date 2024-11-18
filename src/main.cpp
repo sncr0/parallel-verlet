@@ -4,6 +4,7 @@
 #include "context/Context.h"
 #include "integrator/VerletIntegrator.h"
 #include "forces/LennardJonesForce.h"
+#include "forces/HarmonicBondForce.h"
 #include <iostream>
 #include "getopt.h"
 #include "logging/Verbose.h"
@@ -29,7 +30,11 @@ int main(int argc, char **argv) {
 
 
     auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
+    auto hbForce = std::make_shared<HarmonicBondForce>(1.0, 1.0);
+    hbForce->addBond(0, 1);
+
     integrator.addForce(ljForce);
+    integrator.addForce(hbForce);
 
     Context context(system, integrator);
 
