@@ -3,6 +3,7 @@
 #include "system/System.h"
 #include "context/Context.h"
 #include "integrator/VerletIntegrator.h"
+#include "forces/LennardJonesForce.h"
 #include <iostream>
 #include "getopt.h"
 #include "logging/Verbose.h"
@@ -25,6 +26,11 @@ int main(int argc, char **argv) {
     system.addParticle(1.0, 1.0, 1.0, 1.0);
 
     VerletIntegrator integrator(0.01);
+
+
+    auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
+    integrator.addForce(ljForce);
+
     Context context(system, integrator);
 
     VERBOSE("Starting the simulation with %zu particles\n", system.getNumParticles());
