@@ -17,3 +17,7 @@ size_t System::getNumParticles() const {
 Particle& System::getParticle(size_t index) {
     return particles.at(index);
 }
+
+const Particle& System::getParticle(size_t index) const {
+    return particles.at(index); // Const version
+}
