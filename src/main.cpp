@@ -24,25 +24,35 @@ int main(int argc, char **argv) {
 
 
     System system;
-    system.addParticle(1.0, 0.0, 0.0, 0.0);
-    system.addParticle(1.0, 1.0, 1.0, 1.0);
+    // system.addParticle(1.0, 0.0, 0.0, 0.0);
+    // system.addParticle(1.0, 1.0, 1.0, 1.0);
 
-    system.addParticle(1.0, 2.0, 2.0, 2.0);
-    system.addParticle(1.0, 3.0, 3.0, 3.0);
-
+    // system.addParticle(1.0, 2.0, 2.0, 2.0);
+    // system.addParticle(1.0, 3.0, 3.0, 3.0);
     VerletIntegrator integrator(0.01);
-
-
-    // auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
     auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
-    hbForce1->addBond(0, 1);
 
-    auto hbForce2 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
-    hbForce2->addBond(2, 3);
 
-    // integrator.addForce(ljForce);
+    for (int i = 0; i < 1000; ++i) {
+        // Placing particles along a 1D line (e.g., x-axis)
+        system.addParticle(1.0, i * 1.1, 0.0, 0.0);  // (mass, x, y, z)
+        system.addParticle(1.0, i * 1.0, 1.0, 0.0);  // (mass, x, y, z)
+
+        hbForce1->addBond(2*i, 2*i + 1);
+
+    }
+
     integrator.addForce(hbForce1);
-    integrator.addForce(hbForce2);
+
+
+    // // auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
+    // hbForce1->addBond(0, 1);
+
+    // auto hbForce2 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
+    // hbForce2->addBond(2, 3);
+
+    // // integrator.addForce(ljForce);
+    // integrator.addForce(hbForce2);
 
     Context context(system, integrator);
 
@@ -53,7 +63,7 @@ int main(int argc, char **argv) {
     XYZWriter trajectoryWriter("trajectory.xyz");
 
     // Run the simulation and write trajectory
-    const int numSteps = 100000;
+    const int numSteps = 10000;
     const int outputInterval = 100; // Output every 100 steps
 
     for (int step = 0; step < numSteps; ++step) {
