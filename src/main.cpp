@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 1000000; ++i) {
         // Placing particles along a 1D line (e.g., x-axis)
         system.addParticle(1.0, i * 1.1, 0.0, 0.0);  // (mass, x, y, z)
         system.addParticle(1.0, i * 1.0, 1.0, 0.0);  // (mass, x, y, z)
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     XYZWriter trajectoryWriter("trajectory.xyz");
 
     // Run the simulation and write trajectory
-    const int numSteps = 10000;
+    const int numSteps = 1;
     const int outputInterval = 100; // Output every 100 steps
 
     for (int step = 0; step < numSteps; ++step) {
@@ -78,10 +78,10 @@ int main(int argc, char **argv) {
     trajectoryWriter.close();
 
     // Output the final positions of particles
-    for (size_t i = 0; i < system.getNumParticles(); ++i) {
-        auto pos = system.getParticle(i).getPosition();
-        std::cout << "Particle " << i << " final position: (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")\n";
-    }
+    // for (size_t i = 0; i < system.getNumParticles(); ++i) {
+    //     auto pos = system.getParticle(i).getPosition();
+    //     std::cout << "Particle " << i << " final position: (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")\n";
+    // }
 
     return 0;
 }

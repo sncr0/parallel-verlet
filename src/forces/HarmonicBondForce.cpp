@@ -2,6 +2,7 @@
 #include <cmath> // for sqrt and pow
 #include <omp.h>    // for OpenMP
 #include "../logging/Verbose.h"
+#include <unistd.h>
 
 HarmonicBondForce::HarmonicBondForce(double springConstant, double equilibriumDistance)
     : springConstant(springConstant), equilibriumDistance(equilibriumDistance) {}
@@ -63,16 +64,29 @@ void HarmonicBondForce::addBond(size_t particle1Index, size_t particle2Index) {
 void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3>>& forces) const {
     // Create thread-local forces arrays
     int num_threads = 1;
+    size_t num_bonds = bonds.size();
+    size_t num_particles = forces.size();
+
+
     std::vector<std::vector<std::array<double, 3>>> local_forces(num_threads, 
         std::vector<std::array<double, 3>>(forces.size(), {0.0, 0.0, 0.0}));
     
     #pragma omp parallel num_threads(num_threads)
     {
         int thread_id = omp_get_thread_num(); // Get the thread ID for the current thread
-        auto& thread_local_forces = local_forces[thread_id]; // Reference to this thread's local forces
+        // auto& thread_local_forces = local_forces[thread_id]; // Reference to this thread's local forces
+        std::vector<std::array<double, 3>> thread_local_forces(num_particles, {0.0, 0.0, 0.0});
 
         #pragma omp for
-        for (size_t bondIdx = 0; bondIdx < bonds.size(); ++bondIdx) {
+        for (size_t bondIdx = 0; bondIdx < num_bonds; ++bondIdx) {
+            // sleep 1 sec with c style code
+
+            // #include <unistd.h>
+            // double z = 2.0;
+            // for (int i = 0; i < 1000; i++) {
+            //     z += std::sqrt(z+1);
+            // }
+            // printf("bond %d Thread %d: %d\n", bondIdx, 0, z);
             const auto& bond = bonds[bondIdx];
             size_t particle1_idx = bond.first;
             size_t particle2_idx = bond.second;
@@ -114,16 +128,17 @@ void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3
             thread_local_forces[particle2_idx][0] -= force_x;
             thread_local_forces[particle2_idx][1] -= force_y;
             thread_local_forces[particle2_idx][2] -= force_z;
-            }
+        }
     }
 
     // Combine thread-local forces into the shared forces array
-    for (int t = 0; t < num_threads; ++t) {
-        for (size_t i = 0; i < forces.size(); ++i) {
-            for (int k = 0; k < 3; ++k) {
-                forces[i][k] += local_forces[t][i][k];
-            }
-        }
-    }
+    // #pragma omp parallel for num_threads(num_threads)
+    // for (size_t i = 0; i < forces.size(); ++i) {
+    //     for (size_t k = 0; k < 3; ++k) {
+    //         for (int t = 0; t < num_threads; ++t) {
+    //             forces[i][k] += local_forces[t][i][k];
+    //         }
+    //     }
+    // }
 }
 
