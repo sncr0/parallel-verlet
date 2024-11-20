@@ -9,19 +9,33 @@
 #include "io/XYZWriter.h"
 #include "getopt.h"
 #include "logging/Verbose.h"
-
+#include "thread_manager/ThreadManager.h"
+#include <chrono>
 
 
 int main(int argc, char **argv) {
     int c;
-    while ((c = getopt(argc,argv,"v")) != -1 ){
+    int harmonic_bond_threads = 1;
+    while ((c = getopt(argc,argv,"vh:")) != -1 ){
         switch(c) {
             case 'v':
                 setVerboseFlag(1);
                 break;
+            case 'h':
+                char* end;
+                long value = std::strtol(optarg, &end, 10);
+                if (*end != '\0' || value <= 0) {
+                    std::cerr << "Invalid number of threads: " << optarg << "\n";
+                    return EXIT_FAILURE;
+                }
+                harmonic_bond_threads = static_cast<int>(value);
+                printf("harmonic_bond_threads: %d\n", harmonic_bond_threads);
+                break;
         }
     }
 
+    std::chrono::high_resolution_clock::time_point begin = std::chrono::high_resolution_clock::now();
+    ThreadManager thread_manager(harmonic_bond_threads, 1);
 
     System system;
     // system.addParticle(1.0, 0.0, 0.0, 0.0);
@@ -29,7 +43,7 @@ int main(int argc, char **argv) {
 
     // system.addParticle(1.0, 2.0, 2.0, 2.0);
     // system.addParticle(1.0, 3.0, 3.0, 3.0);
-    VerletIntegrator integrator(0.01);
+    VerletIntegrator integrator(0.01, thread_manager);
     auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
@@ -55,6 +69,11 @@ int main(int argc, char **argv) {
     // integrator.addForce(hbForce2);
 
     Context context(system, integrator);
+
+
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(end - begin);
+    printf("Time to create system: %f\n", elapsed.count());
 
     VERBOSE("Starting the simulation with %zu particles\n", system.getNumParticles());
 

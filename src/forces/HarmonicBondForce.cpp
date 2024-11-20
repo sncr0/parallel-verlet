@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <chrono>
+#include "../thread_manager/ThreadManager.h"
 
 HarmonicBondForce::HarmonicBondForce(double springConstant, double equilibriumDistance)
     : springConstant(springConstant), equilibriumDistance(equilibriumDistance) {}
@@ -13,70 +14,25 @@ void HarmonicBondForce::addBond(size_t particle1Index, size_t particle2Index) {
     bonds.emplace_back(particle1Index, particle2Index);
 }
 
-// void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3>>& forces) const {
-//     // std::vector<std::array<double, 3>> local_forces(forces.size(), {0.0, 0.0, 0.0}); // Create a local forces array
-//     #pragma omp parallel for num_threads(4)
-//     for (const auto& bond : bonds) {
-//         size_t i = bond.first;
-//         size_t j = bond.second;
-
-//         Particle& particle1 = system.getParticle(i);
-//         Particle& particle2 = system.getParticle(j);
-
-//         const std::array<double, 3>& pos1 = particle1.getPosition();
-//         const std::array<double, 3>& pos2 = particle2.getPosition();
-
-//         // Calculate the distance vector and its magnitude
-//         std::array<double, 3> r = {0.0, 0.0, 0.0};
-//         double rSquared = 0.0;
-        
-//         // Calculate displacement vector and squared distance
-//         for (int k = 0; k < 3; ++k) {
-//             r[k] = pos2[k] - pos1[k];
-//             rSquared += r[k] * r[k];
-//         }
-        
-//         // Calculate actual distance between particles
-//         double rMagnitude = std::sqrt(rSquared);
-
-//         // Skip if particles are at the same position to avoid division by zero
-//         if (rMagnitude < 1e-10) continue;
-
-//         // Calculate the force using the harmonic potential formula:
-//         // F = -k(r - r₀)r̂
-//         // where k is the spring constant, r is the current distance,
-//         // r₀ is the equilibrium distance, and r̂ is the unit vector
-//         double deltaR = rMagnitude - equilibriumDistance;
-//         double forceMagnitude = springConstant * deltaR;
-        
-//         // Convert to force per component by multiplying by the normalized direction vector
-//         for (int k = 0; k < 3; ++k) {
-//             // Divide by rMagnitude to normalize the direction vector
-//             double force = forceMagnitude * (r[k] / rMagnitude);
-            
-//             // Apply equal and opposite forces to both particles (Newton's Third Law)
-//             // #pragma omp atomic
-//             forces[i][k] += force;  // Force on particle i
-//             // #pragma omp atomic
-//             forces[j][k] -= force;  // Equal and opposite force on particle j
-//         }
-//     }
-// }
-
-void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3>>& forces) const {
+void HarmonicBondForce::compute(System& system, 
+                                    std::vector<std::array<double, 3>>& forces,
+                                    ThreadManager& thread_manager) const {
+    // extern ThreadConfig thread_config;
+    printf("harmonic_bond_threads: %d\n", thread_manager.harmonic_bond_threads);
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // Create thread-local forces arrays
-    int num_threads = 4;
+    int num_threads = thread_manager.harmonic_bond_threads;
     size_t num_bonds = bonds.size();
+    printf("num_bonds: %ld\n", num_bonds);
     size_t num_particles = forces.size();
+    printf("num_particles: %ld\n", num_particles);
 
 
     std::vector<std::vector<std::array<double, 3>>> local_forces(num_threads, 
     std::vector<std::array<double, 3>>(forces.size(), {0.0, 0.0, 0.0}));
 
-    auto start_loop_time = std::chrono::high_resolution_clock::now();
 
     
     #pragma omp parallel num_threads(num_threads)
@@ -84,6 +40,7 @@ void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3
         int thread_id = omp_get_thread_num(); // Get the thread ID for the current thread
         // auto& thread_local_forces = local_forces[thread_id]; // Reference to this thread's local forces
         std::vector<std::array<double, 3>> thread_local_forces(num_particles, {0.0, 0.0, 0.0});
+        auto start_loop_time = std::chrono::high_resolution_clock::now();
 
         #pragma omp for
         for (size_t bondIdx = 0; bondIdx < num_bonds; ++bondIdx) {
@@ -128,32 +85,37 @@ void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3
 
             // Accumulate forces in thread-local storage
             // Force on atom1
-            // thread_local_forces[particle1_idx][0] += force_x;
-            // thread_local_forces[particle1_idx][1] += force_y;
-            // thread_local_forces[particle1_idx][2] += force_z;
+            thread_local_forces[particle1_idx][0] += force_x;
+            thread_local_forces[particle1_idx][1] += force_y;
+            thread_local_forces[particle1_idx][2] += force_z;
 
-            // // Equal and opposite force on particle2
-            // thread_local_forces[particle2_idx][0] -= force_x;
-            // thread_local_forces[particle2_idx][1] -= force_y;
-            // thread_local_forces[particle2_idx][2] -= force_z;
+            // Equal and opposite force on particle2
+            thread_local_forces[particle2_idx][0] -= force_x;
+            thread_local_forces[particle2_idx][1] -= force_y;
+            thread_local_forces[particle2_idx][2] -= force_z;
         }
 
         auto end_loop_time = std::chrono::high_resolution_clock::now();
         auto loop_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_loop_time - start_loop_time);
-        if (thread_id == 0) {
-            std::cout << "Time taken by loop iterations in parallel region: " 
-                      << loop_duration.count() << " ms" << std::endl;
-        }
+        // if (thread_id == 0) {
+            // std::cout << "Time taken by loop iterations in parallel region: " 
+            //           << loop_duration.count() << " ms" << std::endl;
+            printf("time taken by loop iterations in parallel region: %d ms\n", loop_duration.count());
+        // }
     }
 
     // Combine thread-local forces into the shared forces array
-    // #pragma omp parallel for num_threads(num_threads)
-    // for (size_t i = 0; i < forces.size(); ++i) {
-    //     for (size_t k = 0; k < 3; ++k) {
-    //         for (int t = 0; t < num_threads; ++t) {
-    //             forces[i][k] += local_forces[t][i][k];
-    //         }
-    //     }
-    // }
+    #pragma omp parallel for num_threads(num_threads)
+    for (size_t i = 0; i < forces.size(); ++i) {
+        for (size_t k = 0; k < 3; ++k) {
+            for (int t = 0; t < num_threads; ++t) {
+                forces[i][k] += local_forces[t][i][k];
+            }
+        }
+    }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    printf("Time taken by harmonic bond force computation: %d ms\n", duration.count());
 }
 
