@@ -3,6 +3,8 @@
 #include <omp.h>    // for OpenMP
 #include "../logging/Verbose.h"
 #include <unistd.h>
+#include <iostream>
+#include <chrono>
 
 HarmonicBondForce::HarmonicBondForce(double springConstant, double equilibriumDistance)
     : springConstant(springConstant), equilibriumDistance(equilibriumDistance) {}
@@ -62,14 +64,20 @@ void HarmonicBondForce::addBond(size_t particle1Index, size_t particle2Index) {
 // }
 
 void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3>>& forces) const {
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     // Create thread-local forces arrays
-    int num_threads = 1;
+    int num_threads = 4;
     size_t num_bonds = bonds.size();
     size_t num_particles = forces.size();
 
 
     std::vector<std::vector<std::array<double, 3>>> local_forces(num_threads, 
-        std::vector<std::array<double, 3>>(forces.size(), {0.0, 0.0, 0.0}));
+    std::vector<std::array<double, 3>>(forces.size(), {0.0, 0.0, 0.0}));
+
+    auto start_loop_time = std::chrono::high_resolution_clock::now();
+
     
     #pragma omp parallel num_threads(num_threads)
     {
@@ -82,7 +90,7 @@ void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3
             // sleep 1 sec with c style code
 
             // #include <unistd.h>
-            // double z = 2.0;
+            double z = 2.0;
             // for (int i = 0; i < 1000; i++) {
             //     z += std::sqrt(z+1);
             // }
@@ -120,14 +128,21 @@ void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3
 
             // Accumulate forces in thread-local storage
             // Force on atom1
-            thread_local_forces[particle1_idx][0] += force_x;
-            thread_local_forces[particle1_idx][1] += force_y;
-            thread_local_forces[particle1_idx][2] += force_z;
+            // thread_local_forces[particle1_idx][0] += force_x;
+            // thread_local_forces[particle1_idx][1] += force_y;
+            // thread_local_forces[particle1_idx][2] += force_z;
 
-            // Equal and opposite force on particle2
-            thread_local_forces[particle2_idx][0] -= force_x;
-            thread_local_forces[particle2_idx][1] -= force_y;
-            thread_local_forces[particle2_idx][2] -= force_z;
+            // // Equal and opposite force on particle2
+            // thread_local_forces[particle2_idx][0] -= force_x;
+            // thread_local_forces[particle2_idx][1] -= force_y;
+            // thread_local_forces[particle2_idx][2] -= force_z;
+        }
+
+        auto end_loop_time = std::chrono::high_resolution_clock::now();
+        auto loop_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_loop_time - start_loop_time);
+        if (thread_id == 0) {
+            std::cout << "Time taken by loop iterations in parallel region: " 
+                      << loop_duration.count() << " ms" << std::endl;
         }
     }
 
