@@ -17,30 +17,53 @@
 int main(int argc, char **argv) {
     int c;
     int harmonic_bond_threads = 1;
-    while ((c = getopt(argc,argv,"vh:")) != -1 ){
-        switch(c) {
+    int electrostatic_bond_threads = 1;
+
+    while ((c = getopt(argc, argv, "vh:e:")) != -1) {
+        switch (c) {
             case 'v':
                 setVerboseFlag(1);
                 break;
-            case 'h':
-                char* end;
-                long value = std::strtol(optarg, &end, 10);
-                if (*end != '\0' || value <= 0) {
-                    std::cerr << "Invalid number of threads: " << optarg << "\n";
+            case 'h': {
+                try {
+                    int value = std::stoi(optarg);
+                    if (value <= 0) {
+                        throw std::invalid_argument("non-positive value");
+                    }
+                    harmonic_bond_threads = value;
+                    printf("harmonic_bond_threads: %d\n", harmonic_bond_threads);
+                } catch (const std::exception& e) {
+                    std::cerr << "Invalid number of threads for -h: " << optarg << "\n";
                     return EXIT_FAILURE;
                 }
-                harmonic_bond_threads = static_cast<int>(value);
-                printf("harmonic_bond_threads: %d\n", harmonic_bond_threads);
                 break;
+            }
+            case 'e': {
+                try {
+                    int value = std::stoi(optarg);
+                    if (value <= 0) {
+                        throw std::invalid_argument("non-positive value");
+                    }
+                    electrostatic_bond_threads = value;
+                    printf("electrostatic_bond_threads: %d\n", electrostatic_bond_threads);
+                } catch (const std::exception& e) {
+                    std::cerr << "Invalid number of threads for -e: " << optarg << "\n";
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
+            default:
+                std::cerr << "Unknown option: " << c << "\n";
+                return EXIT_FAILURE;
         }
     }
 
     std::chrono::high_resolution_clock::time_point begin = std::chrono::high_resolution_clock::now();
-    ThreadManager thread_manager(harmonic_bond_threads, 1, 1);
+    ThreadManager thread_manager(harmonic_bond_threads, 1, electrostatic_bond_threads);
 
     System system;
-    system.addParticle(1.0, 1.0, 0.0, 0.0, 0.0);
-    system.addParticle(1.0, 1.0, 1.0, 1.0, 1.0);
+    // system.addParticle(1.0, 1.0, 0.0, 0.0, 0.0);
+    // system.addParticle(1.0, 1.0, 1.0, 1.0, 1.0);
 
     // system.addParticle(1.0, 2.0, 2.0, 2.0);
     // system.addParticle(1.0, 3.0, 3.0, 3.0);
@@ -51,14 +74,10 @@ int main(int argc, char **argv) {
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    // for (int i = 0; i < 10000000; ++i) {
-    //     // Placing particles along a 1D line (e.g., x-axis)
-    //     system.addParticle(1.0, i * 1.1, 0.0, 0.0);  // (mass, x, y, z)
-    //     system.addParticle(1.0, i * 1.0, 1.0, 0.0);  // (mass, x, y, z)
-
-    //     hbForce1->addBond(2*i, 2*i + 1);
-
-    // }
+    for (int i = 0; i < 1000; ++i) {
+        // Placing particles along a 1D line (e.g., x-axis)
+        system.addParticle(1.0, 1.0, i * 1.0, 1.0, 0.0);  // (mass, x, y, z)
+    }
 
     // integrator.addForce(hbForce1);
 

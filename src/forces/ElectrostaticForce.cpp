@@ -65,17 +65,6 @@ void ElectrostaticForce::compute(System& system,
                 double force_y = force_scale * dy;
                 double force_z = force_scale * dz;
 
-                // Accumulate forces in thread-local storage
-                // Force on particle1
-                // thread_local_forces[particle1_index][0] += force_x;
-                // thread_local_forces[particle1_index][1] += force_y;
-                // thread_local_forces[particle1_index][2] += force_z;
-
-                // // Equal and opposite force on particle2
-                // thread_local_forces[particle2_index][0] -= force_x;
-                // thread_local_forces[particle2_index][1] -= force_y;
-                // thread_local_forces[particle2_index][2] -= force_z;
-
                 thread_local_forces_x[particle1_index] += force_x;
                 thread_local_forces_y[particle1_index] += force_y;
                 thread_local_forces_z[particle1_index] += force_z;
@@ -84,39 +73,24 @@ void ElectrostaticForce::compute(System& system,
                 thread_local_forces_y[particle2_index] -= force_y;
                 thread_local_forces_z[particle2_index] -= force_z;
 
-                // forces[particle1_index][0] += force_x;
-                // forces[particle1_index][1] += force_y;
-                // forces[particle1_index][2] += force_z;
-
-                // // Equal and opposite force on particle2
-                // forces[particle2_index][0] -= force_x;
-                // forces[particle2_index][1] -= force_y;
-                // forces[particle2_index][2] -= force_z;
                 VERBOSE("forces: %f %f %f\n", force_x, force_y, force_z);
                 VERBOSE("positions 1: %f %f %f\n", particle1_pos[0], particle1_pos[1], particle1_pos[2]);
                 VERBOSE("positions 2: %f %f %f\n", particle2_pos[0], particle2_pos[1], particle2_pos[2]);
 
             }
         }
-        
+
         # pragma omp critical
-        for (size_t thread_index, particle_index = 0; particle_index < num_particles; ++particle_index) {
+        printf("thread_id: %d\n", thread_id);
+        for (size_t particle_index; particle_index < num_particles; ++particle_index) {
+            VERBOSE("thread_id: %d\n", thread_id);
+            VERBOSE("particle_index: %d\n", particle_index);
+            VERBOSE("local forces: %f %f %f\n", thread_local_forces_x[particle_index], thread_local_forces_y[particle_index], thread_local_forces_z[particle_index]);
+            VERBOSE("forces: %f %f %f\n", forces[particle_index][0], forces[particle_index][1], forces[particle_index][2]);
             forces[particle_index][0] += thread_local_forces_x[particle_index];
             forces[particle_index][1] += thread_local_forces_y[particle_index];
             forces[particle_index][2] += thread_local_forces_z[particle_index];
         }
-
-
-
-
-            // for (size_t i = 0; i < forces.size(); ++i) {
-            //     for (size_t k = 0; k < 3; ++k) {
-            //         for (int t = 0; t < num_threads; ++t) {
-            //             printf("local forces: %f %f %f\n", local_forces[t][i][0], local_forces[t][i][1], local_forces[t][i][2]);
-            //             forces[i][k] += thread_local_forces[t][i][k];
-            //         }
-            //     }
-            // }
     }
 
     // Combine thread-local forces into the shared forces array
