@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 10000000; ++i) {
         // Placing particles along a 1D line (e.g., x-axis)
         system.addParticle(1.0, i * 1.1, 0.0, 0.0);  // (mass, x, y, z)
         system.addParticle(1.0, i * 1.0, 1.0, 0.0);  // (mass, x, y, z)

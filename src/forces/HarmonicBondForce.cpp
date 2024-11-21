@@ -18,16 +18,16 @@ void HarmonicBondForce::compute(System& system,
                                     std::vector<std::array<double, 3>>& forces,
                                     ThreadManager& thread_manager) const {
     // extern ThreadConfig thread_config;
-    printf("harmonic_bond_threads: %d\n", thread_manager.harmonic_bond_threads);
+    // printf("harmonic_bond_threads: %d\n", thread_manager.harmonic_bond_threads);
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
     // Create thread-local forces arrays
     int num_threads = thread_manager.harmonic_bond_threads;
     size_t num_bonds = bonds.size();
-    printf("num_bonds: %ld\n", num_bonds);
+    // printf("num_bonds: %ld\n", num_bonds);
     size_t num_particles = forces.size();
-    printf("num_particles: %ld\n", num_particles);
+    // printf("num_particles: %ld\n", num_particles);
 
 
     std::vector<std::vector<std::array<double, 3>>> local_forces(num_threads, 
@@ -37,7 +37,7 @@ void HarmonicBondForce::compute(System& system,
     
     #pragma omp parallel num_threads(num_threads)
     {
-        int thread_id = omp_get_thread_num(); // Get the thread ID for the current thread
+        // int thread_id = omp_get_thread_num(); // Get the thread ID for the current thread
         // auto& thread_local_forces = local_forces[thread_id]; // Reference to this thread's local forces
         std::vector<std::array<double, 3>> thread_local_forces(num_particles, {0.0, 0.0, 0.0});
         auto start_loop_time = std::chrono::high_resolution_clock::now();
@@ -105,7 +105,7 @@ void HarmonicBondForce::compute(System& system,
     }
 
     // Combine thread-local forces into the shared forces array
-    #pragma omp parallel for num_threads(num_threads)
+    // #pragma omp parallel for num_threads(num_threads)
     for (size_t i = 0; i < forces.size(); ++i) {
         for (size_t k = 0; k < 3; ++k) {
             for (int t = 0; t < num_threads; ++t) {
