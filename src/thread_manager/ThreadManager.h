@@ -5,14 +5,15 @@
 struct ThreadManager {
     int harmonic_bond_threads;   // Number of threads for harmonic bonds
     int lennard_jones_threads;   // Number of threads for Lennard-Jones interactions
+    int electrostatic_threads;   // Number of threads for electrostatic forces
 
     // Default constructor
     ThreadManager()
-        : harmonic_bond_threads(1), lennard_jones_threads(1) {}
+        : harmonic_bond_threads(1), lennard_jones_threads(1), electrostatic_threads(1) {}
 
     // Constructor with initial values
-    ThreadManager(int hbThreads, int ljThreads)
-        : harmonic_bond_threads(hbThreads), lennard_jones_threads(ljThreads) {}
+    ThreadManager(int hb_threads, int lj_threads, int es_threads)
+        : harmonic_bond_threads(hb_threads), lennard_jones_threads(lj_threads), electrostatic_threads(es_threads) {}
 };
 
 #endif // THREAD_MANAGER_H

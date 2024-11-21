@@ -5,6 +5,7 @@
 #include "integrator/VerletIntegrator.h"
 #include "forces/LennardJonesForce.h"
 #include "forces/HarmonicBondForce.h"
+#include "forces/ElectrostaticForce.h"
 #include <iostream>
 #include "io/XYZWriter.h"
 #include "getopt.h"
@@ -35,32 +36,37 @@ int main(int argc, char **argv) {
     }
 
     std::chrono::high_resolution_clock::time_point begin = std::chrono::high_resolution_clock::now();
-    ThreadManager thread_manager(harmonic_bond_threads, 1);
+    ThreadManager thread_manager(harmonic_bond_threads, 1, 1);
 
     System system;
-    // system.addParticle(1.0, 0.0, 0.0, 0.0);
-    // system.addParticle(1.0, 1.0, 1.0, 1.0);
+    system.addParticle(1.0, 1.0, 0.0, 0.0, 0.0);
+    system.addParticle(1.0, 1.0, 1.0, 1.0, 1.0);
 
     // system.addParticle(1.0, 2.0, 2.0, 2.0);
     // system.addParticle(1.0, 3.0, 3.0, 3.0);
     VerletIntegrator integrator(0.01, thread_manager);
-    auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
+
+    auto electrostatic_force = std::make_shared<ElectrostaticForce>(1.0);
+    integrator.addForce(electrostatic_force);
+    // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    for (int i = 0; i < 10000000; ++i) {
-        // Placing particles along a 1D line (e.g., x-axis)
-        system.addParticle(1.0, i * 1.1, 0.0, 0.0);  // (mass, x, y, z)
-        system.addParticle(1.0, i * 1.0, 1.0, 0.0);  // (mass, x, y, z)
+    // for (int i = 0; i < 10000000; ++i) {
+    //     // Placing particles along a 1D line (e.g., x-axis)
+    //     system.addParticle(1.0, i * 1.1, 0.0, 0.0);  // (mass, x, y, z)
+    //     system.addParticle(1.0, i * 1.0, 1.0, 0.0);  // (mass, x, y, z)
 
-        hbForce1->addBond(2*i, 2*i + 1);
+    //     hbForce1->addBond(2*i, 2*i + 1);
 
-    }
+    // }
 
-    integrator.addForce(hbForce1);
+    // integrator.addForce(hbForce1);
 
 
     // // auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
     // hbForce1->addBond(0, 1);
+
+
 
     // auto hbForce2 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
     // hbForce2->addBond(2, 3);
@@ -82,7 +88,7 @@ int main(int argc, char **argv) {
     // XYZWriter trajectoryWriter("trajectory.xyz");
 
     // Run the simulation and write trajectory
-    const int numSteps = 1;
+    const int numSteps = 1000;
     const int outputInterval = 100; // Output every 100 steps
 
     for (int step = 0; step < numSteps; ++step) {
@@ -97,10 +103,10 @@ int main(int argc, char **argv) {
     // trajectoryWriter.close();
 
     // Output the final positions of particles
-    // for (size_t i = 0; i < system.getNumParticles(); ++i) {
-    //     auto pos = system.getParticle(i).getPosition();
-    //     std::cout << "Particle " << i << " final position: (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")\n";
-    // }
+    for (size_t i = 0; i < system.getNumParticles(); ++i) {
+        auto pos = system.getParticle(i).getPosition();
+        std::cout << "Particle " << i << " final position: (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")\n";
+    }
 
     return 0;
 }
