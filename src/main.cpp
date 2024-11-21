@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 10; ++i) {
         // Placing particles along a 1D line (e.g., x-axis)
         // system.addParticle(1.0, 1.0, i * 3.0, 1.0, 0.0);  // (mass, x, y, z)
         int x = rand()%500;
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
     // XYZWriter trajectoryWriter("trajectory.xyz");
 
     // Run the simulation and write trajectory
-    const int numSteps = 10;
+    const int numSteps = 50000;
     const int outputInterval = 100; // Output every 100 steps
 
     for (int step = 0; step < numSteps; ++step) {
