@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include "../system/System.h"
+#include "../thread_manager/ThreadManager.h"
 
 class Force {
 public:
@@ -14,7 +15,9 @@ public:
      * @param system - The system containing particles.
      * @param forces - A reference to the forces array to update.
      */
-    virtual void compute(System& system, std::vector<std::array<double, 3>>& forces) const = 0;
+    virtual void compute(System& system,
+                            std::vector<std::array<double, 3>>& forces,
+                            ThreadManager& thread_manager) const = 0;
 };
 
 #endif // FORCE_H

@@ -3,7 +3,8 @@
 LennardJonesForce::LennardJonesForce(double epsilon, double sigma)
     : epsilon(epsilon), sigma(sigma) {}
 
-void LennardJonesForce::compute(System& system, std::vector<std::array<double, 3>>& forces) const {
+void LennardJonesForce::compute(System& system, std::vector<std::array<double, 3>>& forces,
+                                    ThreadManager& tread_manager) const {
     size_t numParticles = system.getNumParticles();
 
     for (size_t i = 0; i < numParticles; ++i) {

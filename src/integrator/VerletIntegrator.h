@@ -8,10 +8,11 @@
 #include <vector>
 #include <memory>
 #include "../forces/Force.h"
+#include "../thread_manager/ThreadManager.h"
 
 class VerletIntegrator {
 public:
-    explicit VerletIntegrator(double timestep);
+    explicit VerletIntegrator(double timestep, ThreadManager& thread_manager);
     void step(System& system);
     void addForce(std::shared_ptr<Force> force);
 
@@ -22,6 +23,7 @@ private:
     // Parameters for Lennard-Jones potential
     const double epsilon = 1.0; // Depth of the potential well
     const double sigma = 1.0;   // Distance at which the potential is minimum
+    ThreadManager& thread_manager;
 
     std::vector<std::shared_ptr<Force>> forces; // Collection of forces
 

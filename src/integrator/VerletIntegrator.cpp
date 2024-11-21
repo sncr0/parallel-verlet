@@ -4,7 +4,9 @@
 #include <cmath> // for pow and sqrt
 #include "../logging/Verbose.h"
 
-VerletIntegrator::VerletIntegrator(double timestep) : timestep(timestep) {}
+VerletIntegrator::VerletIntegrator(double ts, 
+                                    ThreadManager& tm) : timestep(ts), 
+                                                            thread_manager(tm) {}
 
 void VerletIntegrator::addForce(std::shared_ptr<Force> force) {
     forces.push_back(force);
@@ -22,7 +24,7 @@ void VerletIntegrator::step(System& system) {
     std::vector<std::array<double, 3>> forcesArray(numParticles, {0.0, 0.0, 0.0});
 
     for (const auto& force : forces) {
-        force->compute(system, forcesArray);
+        force->compute(system, forcesArray, thread_manager);
     }
 
     // Integrate positions and velocities
