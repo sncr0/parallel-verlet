@@ -12,6 +12,8 @@
 #include "logging/Verbose.h"
 #include "thread_manager/ThreadManager.h"
 #include <chrono>
+#include <bits/stdc++.h>
+
 
 
 int main(int argc, char **argv) {
@@ -74,9 +76,16 @@ int main(int argc, char **argv) {
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         // Placing particles along a 1D line (e.g., x-axis)
-        system.addParticle(1.0, 1.0, i * 1.0, 1.0, 0.0);  // (mass, x, y, z)
+        // system.addParticle(1.0, 1.0, i * 3.0, 1.0, 0.0);  // (mass, x, y, z)
+        int x = rand()%500;
+        int y = rand()%500;
+        int z = rand()%500;
+        printf("x: %d, y: %d, z: %d\n", x, y, z);
+        system.addParticle(1.0, -1.0, x, y, z);  // (mass, x, y, z)
+        // system.addParticle(rand()%100, rand()%100, rand()%100, 1.0, 0.0);  // (mass, x, y, z)
+        // show coords:;
     }
 
     // integrator.addForce(hbForce1);
@@ -107,7 +116,7 @@ int main(int argc, char **argv) {
     // XYZWriter trajectoryWriter("trajectory.xyz");
 
     // Run the simulation and write trajectory
-    const int numSteps = 1000;
+    const int numSteps = 10;
     const int outputInterval = 100; // Output every 100 steps
 
     for (int step = 0; step < numSteps; ++step) {
@@ -120,7 +129,7 @@ int main(int argc, char **argv) {
 
     // Close the trajectory writer
     // trajectoryWriter.close();
-
+// 
     // Output the final positions of particles
     for (size_t i = 0; i < system.getNumParticles(); ++i) {
         auto pos = system.getParticle(i).getPosition();

@@ -34,7 +34,7 @@ void ElectrostaticForce::compute(System& system,
         std::vector<double> thread_local_forces_z(num_particles, 0.0);
         // std::vector<std::array<double, 3>> thread_local_forces(num_particles, {0.0, 0.0, 0.0});
         
-        #pragma omp for
+        #pragma omp for collapse(2)
         for (size_t particle1_index = 0; particle1_index < num_particles; ++particle1_index) {
             for (size_t particle2_index = particle1_index + 1; particle2_index < num_particles; ++particle2_index) {
                 Particle& particle1 = system.getParticle(particle1_index);
@@ -65,13 +65,13 @@ void ElectrostaticForce::compute(System& system,
                 double force_y = force_scale * dy;
                 double force_z = force_scale * dz;
 
-                thread_local_forces_x[particle1_index] += force_x;
-                thread_local_forces_y[particle1_index] += force_y;
-                thread_local_forces_z[particle1_index] += force_z;
+                thread_local_forces_x[particle1_index] -= force_x;
+                thread_local_forces_y[particle1_index] -= force_y;
+                thread_local_forces_z[particle1_index] -= force_z;
 
-                thread_local_forces_x[particle2_index] -= force_x;
-                thread_local_forces_y[particle2_index] -= force_y;
-                thread_local_forces_z[particle2_index] -= force_z;
+                thread_local_forces_x[particle2_index] += force_x;
+                thread_local_forces_y[particle2_index] += force_y;
+                thread_local_forces_z[particle2_index] += force_z;
 
                 VERBOSE("forces: %f %f %f\n", force_x, force_y, force_z);
                 VERBOSE("positions 1: %f %f %f\n", particle1_pos[0], particle1_pos[1], particle1_pos[2]);
