@@ -73,10 +73,10 @@ simulating the behavior on a molecular scale.
 Molecular dynamics is based on the integration of Newton's equations of motion. For a system of N particles, this
  corresponds to the following equation:
 \begin{align}
-    m_i \frac{d^2\mathbf{r}_i}{dt^2} = \mathbf{f}_i = -\frac{\delta}{\delta \mathbf{r}_i}V(\mathbf{r}_1,\mathbf{r}_2,...,\mathbf{r}_N)
+    m_i \frac{d^2\mathbf{r}_i}{dt^2} = \mathbf{f}_i = -\frac{\delta}{\delta \mathbf{r}_i}V(\mathbf{r}_1,\mathbf{r}_2,\ldots,\mathbf{r}_N)
 \end{align}
-Where $\mathbf{r}_1,\mathbf{r}_2,...,\mathbf{r}_N$ represent the set of nuclear coordinates of the N-particle system, 
-$V(\mathbf{r}_1,\mathbf{r}_2,...,\mathbf{r}_N)$ the potential energy in function of these coordinates, $\mathbf{f}_i$
+Where $\mathbf{r}_1,\mathbf{r}_2,\ldots,\mathbf{r}_N$ represent the set of nuclear coordinates of the N-particle system, 
+$V(\mathbf{r}_1,\mathbf{r}_2,\ldots,\mathbf{r}_N)$ the potential energy in function of these coordinates, $\mathbf{f}_i$
 the force acting on particle $i$ and $m_i$ the mass of particle $i$. This forms a system of non-linear differential 
 equations, which is not solvable analytically. The simulations use a numerical integration algorithm to iteratively
 calculate the positions and speeds of the particles throughout time. Some commonly used integration algorithms
@@ -100,13 +100,13 @@ I LOVE OPENMM.\cite{eastman2010openmm}
 Organic molecules and biological macromolecules are typically described with the following expression:
 \begin{equation}
     \begin{aligned}
-    V(\mathbf{r}_1,\mathbf{r}_2,...,\mathbf{r}_N) &= V_{\mathrm{bonds}} + V_{\mathrm{angles}} + 
+    V(\mathbf{r}_1,\mathbf{r}_2,\ldots,\mathbf{r}_N) &= V_{\mathrm{bonds}} + V_{\mathrm{angles}} + 
                                                         V_{\mathrm{dihedrals}}\\
                                                     &+ V_{\mathrm{impropers}} + V_{\mathrm{dispersion \: interaction}}\\
                                                     &+ V_{\mathrm{electrostatic \: interaction}}
     \end{aligned}
 \end{equation}
-where $\mathbf{r}_1,\mathbf{r}_2,...,\mathbf{r}_N$ are the particles in the system, $V$ is the potential energy of the
+where $\mathbf{r}_1,\mathbf{r}_2,\ldots,\mathbf{r}_N$ are the particles in the system, $V$ is the potential energy of the
 system in function of these particles, $V_{\mathrm{bonds}}$ the potential related to the bonds, $V_{\mathrm{angles}}$ 
 the potential related to the angles, $V_{\mathrm{dihedrals}}$ the potential related to the dihedrals, 
 $V_{\mathrm{impropers}}$ the potential related to the improper torsions, $V_{\mathrm{dispersion \: interaction}}$ 
@@ -117,7 +117,7 @@ As described above, the formula consists of different types of potentials.
 The term $V_{\mathrm{bonds}}$ can be described as follows:
 \begin{equation}
     \begin{aligned}
-    V_{\mathrm{bonds}} &= \sum_{\mathrm{bonds}} \frac{k_d}{2}*(d-d_0)^2
+    V_{\mathrm{bonds}} &= \sum_{\mathrm{bonds}} \frac{k_d}{2}*{(d-d_0)}^2
     \end{aligned}
 \end{equation}
 where $d$ is the distance between two particles, $d_0$ the standard bond distance for that particular combination of 
@@ -130,7 +130,7 @@ forcefield as discussed above.
 The term $V_{\mathrm{angles}}$ can be described in a similar way:
 \begin{equation}
     \begin{aligned}
-    V_{\mathrm{angles}} &= \sum_{\mathrm{angles}} \frac{k_{\theta}}{2}(\theta-\theta_0)^2
+    V_{\mathrm{angles}} &= \sum_{\mathrm{angles}} \frac{k_{\theta}}{2}{(\theta-\theta_0)}^2
     \end{aligned}
 \end{equation}
 where $\theta$ represents the angle between a given set of 3 particles, $\theta_{0}$ the standard angle for this 
@@ -141,7 +141,7 @@ A final term which is described by means of a harmonic oscillator is the term $V
 often introduced to  maintain planarity of groups with a flat geometry or sometimes to preserve chirality:
 \begin{equation}
     \begin{aligned}
-    V_{\mathrm{impropers}} &= \sum_{\mathrm{impropers}} \frac{k_{\psi}}{2}(\psi-\psi_0)^2
+    V_{\mathrm{impropers}} &= \sum_{\mathrm{impropers}} \frac{k_{\psi}}{2}{(\psi-\psi_0)}^2
     \end{aligned}
 \end{equation}
 where $\psi$ represents the angle between a set of 3 particles, $\psi_0$ the standard improper angle for that 
@@ -153,7 +153,7 @@ The dihedral terms, also referred to as torsion terms, are responsible for intro
 rotation of bonds which do not rotate freely. They can be expressed as follows:
 \begin{equation}
     \begin{aligned}
-    V_{\mathrm{dihedrals}} &= \sum_{\mathrm{dihedrals}} \frac{k_{\phi}}{2}(1+cos(n\phi-\phi_0))
+    V_{\mathrm{dihedrals}} &= \sum_{\mathrm{dihedrals}} \frac{k_{\phi}}{2}(1+\cos(n\phi-\phi_0))
     \end{aligned}
 \end{equation}
 where $\phi$ represents the dihedral angle between a set of 4 particles, $\phi_0$ the standard dihedral angle for 
@@ -165,11 +165,11 @@ the phase factor, which determines the location of the minima. Often, the rotati
 function is not represented by one torsion function, but by a sum of multiple functions. 
 
 The dispersion interaction $V_{\mathrm{dispersion \; interaction}}$ or van der Waals interaction is represented by 
-the Lennard-Jones 12-6 potential and can be rewritten as follows:
+the Lennard-Jones 12\-6 potential and can be rewritten as follows:
 \begin{equation}
     \begin{aligned}
     V_{\mathrm{dispersion \; interaction}} &= \sum_{\mathrm{\substack{\mathrm{non-bonded} \\ \mathrm{pairs(i,j)}}}} 4\varepsilon_{ij}\left[
-    \left(\frac{\sigma_{ij}}{r_{ij}}\right)^{12} - \left(\frac{\sigma_{ij}}{r_{ij}}\right)^6
+    {\left(\frac{\sigma_{ij}}{r_{ij}}\right)}^{12} - {\left(\frac{\sigma_{ij}}{r_{ij}}\right)}^6
     \right]
     \end{aligned}
 \end{equation}
@@ -181,7 +181,7 @@ The electrostatic interaction $V_{\mathrm{electrostatic \; interaction}}$ is rep
 be rewritten as follows: 
 \begin{equation}
     \begin{aligned}
-    V_{\mathrm{electrostatic \; interaction}} &= \sum_{\mathrm{\substack{\mathrm{non-bonded} \\ \mathrm{pairs(i,j)}}}} \frac{q_iq_j}{4\pi\varepsilon_0r_{ij}}
+    V_{\mathrm{electrostatic \; interaction}} &= \sum_{\mathrm{\substack{\mathrm{non-bonded} \\ \mathrm{pairs(i,j)}}}} \frac{q_i q_j}{4\pi\varepsilon_0r_{ij}}
     \end{aligned}
 \end{equation}
 where $r_{ij}$ is the distance between a set of particles $(i,j)$, $q_i$ and $q_j$ are the charges on particles $i$ 
@@ -198,7 +198,7 @@ with the forces acting on them. The formula is given as follows:
 \end{align}
 
 \begin{align}
-    m_i \frac{d^2\mathbf{r}_i}{dt^2} = \mathbf{f}_i = -\frac{\delta}{\delta \mathbf{r}_i}V(\mathbf{r}_1,\mathbf{r}_2,...,\mathbf{r}_N)
+    m_i \frac{d^2\mathbf{r}_i}{dt^2} = \mathbf{f}_i = -\frac{\delta}{\delta \mathbf{r}_i}V(\mathbf{r}_1,\mathbf{r}_2,\ldots,\mathbf{r}_N)
 \end{align}
 
 where \( \mathbf{r}(t) \) is the position of the particle at time \( t \), \( \Delta t \) is the integration time 
