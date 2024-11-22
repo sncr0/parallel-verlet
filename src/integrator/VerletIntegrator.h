@@ -26,6 +26,9 @@ private:
     ThreadManager& thread_manager;
 
     std::vector<std::shared_ptr<Force>> forces; // Collection of forces
+    std::vector<std::array<double, 3>> old_forces;
+    bool first_step = true;
+
 
 };
 
