@@ -3,11 +3,16 @@
 #include "Particle.h"
 
 Particle::Particle(double mass, 
+                    double charge,
                     double x, double y, double z, 
-                    double vx, double vy, double vz) : mass(mass), position({x, y, z}), velocity({vx, vy, vz}) {}
+                    double vx, double vy, double vz) : mass(mass), charge(charge), position({x, y, z}), velocity({vx, vy, vz}) {}
 
 double Particle::getMass() const {
     return mass;
+}
+
+double Particle::getCharge() const {
+    return charge;
 }
 
 const std::array<double, 3>& Particle::getPosition() const {
