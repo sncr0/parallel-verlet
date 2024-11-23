@@ -28,6 +28,10 @@ public:
                     ThreadManager& thread_manager,
                     Chronometer& chronometer) const override;
 
+    void compute_parallel(System& system, std::vector<std::array<double, 3>>& forces, 
+                            ThreadManager& thread_manager,
+                            Chronometer& chronometer) const override;
+
 private:
     double coulombConstant;
     std::vector<std::pair<size_t, size_t>> bonds; // List of particle pairs for interactions
