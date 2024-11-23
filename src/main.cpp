@@ -19,7 +19,7 @@
 int main(int argc, char **argv) {
     int c;
     int harmonic_bond_threads = 1;
-    int electrostatic_bond_threads = 1;
+    int electrostatic_bond_threads = 0;
 
     while ((c = getopt(argc, argv, "vh:e:")) != -1) {
         switch (c) {
@@ -74,6 +74,7 @@ int main(int argc, char **argv) {
     VerletIntegrator integrator(0.01, thread_manager, chronometer);
 
     auto electrostatic_force = std::make_shared<ElectrostaticForce>(1.0);
+    electrostatic_force->num_threads = electrostatic_bond_threads;
     integrator.addForce(electrostatic_force);
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 

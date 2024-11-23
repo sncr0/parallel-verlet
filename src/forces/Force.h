@@ -20,6 +20,14 @@ public:
                             std::vector<std::array<double, 3>>& forces,
                             ThreadManager& thread_manager,
                             Chronometer& chronometer) const = 0;
+
+    virtual void compute_parallel(System& system,
+                                    std::vector<std::array<double, 3>>& forces,
+                                    ThreadManager& thread_manager,
+                                    Chronometer& chronometer) const = 0;
+
+    int num_threads = 1;
+
 };
 
 #endif // FORCE_H

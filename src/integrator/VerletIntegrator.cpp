@@ -58,7 +58,11 @@ void VerletIntegrator::step(System& system) {
         old_forces.resize(numParticles, {0.0, 0.0, 0.0});
         // Calculate initial forces
         for (const auto& force : forces) {
-            force->compute(system, old_forces, thread_manager, chronometer);
+            if (force->num_threads == 0) {
+                force->compute(system, old_forces, thread_manager, chronometer);
+            } else {
+                force->compute_parallel(system, old_forces, thread_manager, chronometer);
+            }
         }
         first_step = false;
     }
@@ -83,7 +87,11 @@ void VerletIntegrator::step(System& system) {
     // Step 2: Calculate new forces at new positions
     std::vector<std::array<double, 3>> new_forces(numParticles, {0.0, 0.0, 0.0});
     for (const auto& force : forces) {
-        force->compute(system, new_forces, thread_manager, chronometer);
+        if (force->num_threads == 0) {
+            force->compute(system, new_forces, thread_manager, chronometer);
+        } else {
+            force->compute_parallel(system, new_forces, thread_manager, chronometer);
+        }
     }
 
     // Step 3: Complete velocity update with new forces
