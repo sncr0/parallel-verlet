@@ -7,30 +7,27 @@
 #include <iostream>
 #include <iomanip>
 
-struct timing {
+struct Timing {
     std::chrono::high_resolution_clock::time_point start;
     std::chrono::high_resolution_clock::time_point end;
-    long long duration;
+    std::chrono::nanoseconds duration_ns;
+    std::chrono::microseconds duration_us;   
+    std::chrono::milliseconds duration_ms;
+    std::chrono::seconds duration_s;
 
-    timing(std::chrono::high_resolution_clock::time_point start) : start(start) {}
+    Timing() : start(std::chrono::high_resolution_clock::now()) {}
 };
 
 class Chronometer {
 public:
-    // Start timing a section of code with a given tag
     void start(const std::string& tag);
 
-    // End timing a section of code with a given tag
     void end(const std::string& tag);
 
-    // Print all recorded timings
-    void printTimings() const;
-
-    void printTiming(const std::string& tag) const; 
+    void printTiming(const std::string& tag, const std::string& timescale) const;
 
 private:
-    // Map to store start times for tags
-    std::unordered_map<std::string, timing> timings_map;
+    std::unordered_map<std::string, Timing> timings_map;
 
 };
 
