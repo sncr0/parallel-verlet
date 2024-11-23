@@ -74,11 +74,13 @@ int main(int argc, char **argv) {
     VerletIntegrator integrator(0.01, thread_manager, chronometer);
 
     auto electrostatic_force = std::make_shared<ElectrostaticForce>(1.0);
+    auto electrostatic_force2 = std::make_shared<ElectrostaticForce>(1.0);
     integrator.addForce(electrostatic_force);
+    integrator.addForce(electrostatic_force2);
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 50000; ++i) {
         // Placing particles along a 1D line (e.g., x-axis)
         // system.addParticle(1.0, 1.0, i * 3.0, 1.0, 0.0);  // (mass, x, y, z)
         int x = rand()%500;

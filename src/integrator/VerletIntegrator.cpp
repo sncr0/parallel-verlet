@@ -4,6 +4,7 @@
 #include <cmath> // for pow and sqrt
 #include "../logging/Verbose.h"
 #include "../logging/Chronometer.h"
+#include <omp.h>
 
 
 /* Velocity Verlet Integrator for Molecular Dynamics
@@ -51,6 +52,7 @@ void VerletIntegrator::addForce(std::shared_ptr<Force> force) {
 }
 
 void VerletIntegrator::step(System& system) {
+    chronometer.start("step");
     size_t numParticles = system.getNumParticles();
 
     // Initialize old_forces if this is the first step
@@ -82,8 +84,22 @@ void VerletIntegrator::step(System& system) {
 
     // Step 2: Calculate new forces at new positions
     std::vector<std::array<double, 3>> new_forces(numParticles, {0.0, 0.0, 0.0});
-    for (const auto& force : forces) {
-        force->compute(system, new_forces, thread_manager, chronometer);
+    #pragma omp parallel num_threads(2)
+    {
+        std::vector<std::array<double, 3>> new_forces_thread(numParticles, {0.0, 0.0, 0.0});
+        #pragma omp for
+        for (const auto& force : forces) {
+            force->compute(system, new_forces_thread, thread_manager, chronometer);
+        }
+
+        #pragma omp critical
+        {
+            for (size_t i = 0; i < numParticles; ++i) {
+                for (int k = 0; k < 3; ++k) {
+                    new_forces[i][k] += new_forces_thread[i][k];
+                }
+            }
+        }
     }
 
     // Step 3: Complete velocity update with new forces
@@ -101,4 +117,7 @@ void VerletIntegrator::step(System& system) {
 
     // Store new forces for next timestep
     old_forces = new_forces;
+
+    chronometer.end("step");
+    chronometer.printTiming("step", "ms", 0);
 }
