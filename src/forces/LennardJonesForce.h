@@ -9,7 +9,8 @@ public:
     LennardJonesForce(double epsilon, double sigma);
 
     void compute(System& system, std::vector<std::array<double, 3>>& forces,
-                    ThreadManager& thread_manager) const override;
+                    ThreadManager& thread_manager,
+                    Chronometer& chronometer) const override;
 
 private:
     double epsilon; // Depth of the potential well

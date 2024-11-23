@@ -6,6 +6,8 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <vector>
+#include <map>
 
 struct Timing {
     std::chrono::high_resolution_clock::time_point start;
@@ -20,14 +22,16 @@ struct Timing {
 
 class Chronometer {
 public:
-    void start(const std::string& tag);
+    void start(const std::string& tag, int thread_id = 0);
 
-    void end(const std::string& tag);
+    void end(const std::string& tag, int thread_id = 0);
 
-    void printTiming(const std::string& tag, const std::string& timescale) const;
+    void printTiming(const std::string& tag, const std::string& timescale, int thread_id = 0) const;
 
 private:
-    std::unordered_map<std::string, Timing> timings_map;
+    // through timepoints and over threads, should maybe be dynamically allocated for number of threads
+    // map < tag, map < thread_id, vector < Timing > > >
+    std::unordered_map<std::string, std::unordered_map<int, std::vector<Timing>>> timings_map;
 
 };
 

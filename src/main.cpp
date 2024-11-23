@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 
     Chronometer chronometer;
 
-    chronometer.start("system_creation");
+    // chronometer.start("system_creation");
     ThreadManager thread_manager(harmonic_bond_threads, 1, electrostatic_bond_threads);
 
     System system;
@@ -71,20 +71,20 @@ int main(int argc, char **argv) {
 
     // system.addParticle(1.0, 2.0, 2.0, 2.0);
     // system.addParticle(1.0, 3.0, 3.0, 3.0);
-    VerletIntegrator integrator(0.01, thread_manager);
+    VerletIntegrator integrator(0.01, thread_manager, chronometer);
 
     auto electrostatic_force = std::make_shared<ElectrostaticForce>(1.0);
     integrator.addForce(electrostatic_force);
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         // Placing particles along a 1D line (e.g., x-axis)
         // system.addParticle(1.0, 1.0, i * 3.0, 1.0, 0.0);  // (mass, x, y, z)
         int x = rand()%500;
         int y = rand()%500;
         int z = rand()%500;
-        printf("x: %d, y: %d, z: %d\n", x, y, z);
+        // printf("x: %d, y: %d, z: %d\n", x, y, z);
         system.addParticle(1.0, -1.0, x, y, z);  // (mass, x, y, z)
         // system.addParticle(rand()%100, rand()%100, rand()%100, 1.0, 0.0);  // (mass, x, y, z)
         // show coords:;
@@ -108,8 +108,8 @@ int main(int argc, char **argv) {
 
 
 
-    chronometer.end("system_creation");
-    chronometer.printTiming("system_creation", "us");
+    // chronometer.end("system_creation");
+    // chronometer.printTiming("system_creation", "us");
     // chronometer.printTimings();
     VERBOSE("Starting the simulation with %zu particles\n", system.getNumParticles());
 
@@ -133,10 +133,10 @@ int main(int argc, char **argv) {
     // trajectoryWriter.close();
 // 
     // Output the final positions of particles
-    for (size_t i = 0; i < system.getNumParticles(); ++i) {
-        auto pos = system.getParticle(i).getPosition();
-        std::cout << "Particle " << i << " final position: (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")\n";
-    }
+    // for (size_t i = 0; i < system.getNumParticles(); ++i) {
+    //     auto pos = system.getParticle(i).getPosition();
+    //     std::cout << "Particle " << i << " final position: (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")\n";
+    // }
 
     return 0;
 }

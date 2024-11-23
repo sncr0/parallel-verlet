@@ -15,8 +15,10 @@ void ElectrostaticForce::addBond(size_t particle1Index, size_t particle2Index) {
 
 void ElectrostaticForce::compute(System& system,
                                   std::vector<std::array<double, 3>>& forces,
-                                  ThreadManager& thread_manager) const {
-    auto start_time = std::chrono::high_resolution_clock::now();
+                                  ThreadManager& thread_manager,
+                                  Chronometer& chronometer) const {
+    VERBOSE("Computing electrostatic forces\n");
+    chronometer.start("electrostatic_force_glob");
 
     // Create thread-local forces arrays
     int num_threads = thread_manager.electrostatic_threads;
@@ -29,6 +31,7 @@ void ElectrostaticForce::compute(System& system,
     #pragma omp parallel num_threads(num_threads)
     {
         int thread_id = omp_get_thread_num();
+        chronometer.start("electrostatic_force", thread_id);
         std::vector<double> thread_local_forces_x(num_particles, 0.0);
         std::vector<double> thread_local_forces_y(num_particles, 0.0);
         std::vector<double> thread_local_forces_z(num_particles, 0.0);
@@ -81,23 +84,24 @@ void ElectrostaticForce::compute(System& system,
         }
 
         # pragma omp critical
-        printf("thread_id: %d\n", thread_id);
         for (size_t particle_index; particle_index < num_particles; ++particle_index) {
             VERBOSE("thread_id: %d\n", thread_id);
-            VERBOSE("particle_index: %d\n", particle_index);
+            VERBOSE("particle_index: %ld\n", particle_index);
             VERBOSE("local forces: %f %f %f\n", thread_local_forces_x[particle_index], thread_local_forces_y[particle_index], thread_local_forces_z[particle_index]);
             VERBOSE("forces: %f %f %f\n", forces[particle_index][0], forces[particle_index][1], forces[particle_index][2]);
             forces[particle_index][0] += thread_local_forces_x[particle_index];
             forces[particle_index][1] += thread_local_forces_y[particle_index];
             forces[particle_index][2] += thread_local_forces_z[particle_index];
         }
+
+        chronometer.end("electrostatic_force", thread_id);
+        chronometer.printTiming("electrostatic_force", "ms", thread_id);
     }
 
     // Combine thread-local forces into the shared forces array
     // #pragma omp parallel for num_threads(num_threads)
 
 
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    printf("Time taken by electrostatic force computation: %d ms\n", duration.count());
+    chronometer.end("electrostatic_force_glob");
+    chronometer.printTiming("electrostatic_force_glob", "ms");
 }

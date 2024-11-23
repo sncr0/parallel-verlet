@@ -16,7 +16,8 @@ void HarmonicBondForce::addBond(size_t particle1Index, size_t particle2Index) {
 
 void HarmonicBondForce::compute(System& system, 
                                     std::vector<std::array<double, 3>>& forces,
-                                    ThreadManager& thread_manager) const {
+                                    ThreadManager& thread_manager,
+                                    Chronometer& chronometer) const {
     // extern ThreadConfig thread_config;
     // printf("harmonic_bond_threads: %d\n", thread_manager.harmonic_bond_threads);
 

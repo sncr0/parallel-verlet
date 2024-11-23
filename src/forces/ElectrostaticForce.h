@@ -24,11 +24,14 @@ public:
      * @param system - The system containing particles.
      * @param forces - A reference to the forces array to update.
      */
-    void compute(System& system, std::vector<std::array<double, 3>>& forces, ThreadManager& thread_manager) const override;
+    void compute(System& system, std::vector<std::array<double, 3>>& forces, 
+                    ThreadManager& thread_manager,
+                    Chronometer& chronometer) const override;
 
 private:
     double coulombConstant;
     std::vector<std::pair<size_t, size_t>> bonds; // List of particle pairs for interactions
+    std::vector<std::chrono::duration<long long>> thread_times;
 };
 
 #endif // ELECTROSTATIC_FORCE_H

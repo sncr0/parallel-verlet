@@ -5,6 +5,7 @@
 #include <array>
 #include "../system/System.h"
 #include "../thread_manager/ThreadManager.h"
+#include "../logging/Chronometer.h"
 
 class Force {
 public:
@@ -17,7 +18,8 @@ public:
      */
     virtual void compute(System& system,
                             std::vector<std::array<double, 3>>& forces,
-                            ThreadManager& thread_manager) const = 0;
+                            ThreadManager& thread_manager,
+                            Chronometer& chronometer) const = 0;
 };
 
 #endif // FORCE_H
