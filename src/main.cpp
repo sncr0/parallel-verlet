@@ -11,8 +11,8 @@
 #include "getopt.h"
 #include "logging/Verbose.h"
 #include "thread_manager/ThreadManager.h"
-#include <chrono>
 #include <bits/stdc++.h>
+#include "logging/Chronometer.h"
 
 
 
@@ -60,7 +60,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    std::chrono::high_resolution_clock::time_point begin = std::chrono::high_resolution_clock::now();
+    Chronometer chronometer;
+
+    chronometer.start("system_creation");
     ThreadManager thread_manager(harmonic_bond_threads, 1, electrostatic_bond_threads);
 
     System system;
@@ -105,10 +107,10 @@ int main(int argc, char **argv) {
     Context context(system, integrator);
 
 
-    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(end - begin);
-    printf("Time to create system: %f\n", elapsed.count());
 
+    chronometer.end("system_creation");
+    chronometer.printTiming("system_creation", "us");
+    // chronometer.printTimings();
     VERBOSE("Starting the simulation with %zu particles\n", system.getNumParticles());
 
     // Run the simulation
@@ -116,7 +118,7 @@ int main(int argc, char **argv) {
     // XYZWriter trajectoryWriter("trajectory.xyz");
 
     // Run the simulation and write trajectory
-    const int numSteps = 50000;
+    const int numSteps = 1;
     const int outputInterval = 100; // Output every 100 steps
 
     for (int step = 0; step < numSteps; ++step) {
