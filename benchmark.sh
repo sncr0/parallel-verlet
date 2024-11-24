@@ -5,7 +5,7 @@
 # Configuration
 EXECUTABLE="./bin/molecular_simulation"  # Path to your executable
 OUTPUT_FILE="benchmark_results.csv"      # CSV output file
-THREAD_COUNTS=(1 2 4 8 16)               # Number of threads to test
+THREAD_COUNTS=(0 1 2 4 8 12 16 32 64 128 256)               # Number of threads to test
 NUM_RUNS=5                               # Number of runs per thread count
 
 # Ensure the output file is empty
@@ -19,7 +19,7 @@ for threads in "${THREAD_COUNTS[@]}"; do
 
   for ((run=1; run<=NUM_RUNS; run++)); do
     # Capture runtime using /usr/bin/time
-    runtime=$(/usr/bin/time -f "%e" $EXECUTABLE -n 10000 -n 1 -e $threads 2>&1 | tail -n1)
+    runtime=$(/usr/bin/time -f "%e" $EXECUTABLE -n 1000 -n 1 -e $threads 2>&1 | tail -n1)
     echo "Run $run for $threads threads: ${runtime}s"
     total_time=$(echo "$total_time + $runtime" | bc)
   done
