@@ -98,11 +98,6 @@ void ElectrostaticForce::compute_parallel(System& system,
         chronometer.end("electrostatic_force", thread_id);
         chronometer.printTiming("electrostatic_force", "ms", thread_id);
     }
-
-    // Combine thread-local forces into the shared forces array
-    // #pragma omp parallel for num_threads(num_threads)
-
-
     chronometer.end("electrostatic_force_glob");
     chronometer.printTiming("electrostatic_force_glob", "ms");
 }
