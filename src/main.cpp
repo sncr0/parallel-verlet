@@ -20,8 +20,10 @@ int main(int argc, char **argv) {
     int c;
     int harmonic_bond_threads = 1;
     int electrostatic_bond_threads = 0;
+    int num_atoms = 1;
+    int num_steps = 1;
 
-    while ((c = getopt(argc, argv, "vh:e:")) != -1) {
+    while ((c = getopt(argc, argv, "vh:e:n:s:")) != -1) {
         switch (c) {
             case 'v':
                 setVerboseFlag(1);
@@ -54,6 +56,34 @@ int main(int argc, char **argv) {
                 }
                 break;
             }
+            case 'n': {
+                try {
+                    int value = std::stoi(optarg);
+                    if (value <= 0) {
+                        throw std::invalid_argument("non-positive value");
+                    }
+                    num_atoms = value;
+                    printf("num_atoms: %d\n", num_atoms);
+                } catch (const std::exception& e) {
+                    std::cerr << "Invalid number of atoms for -n: " << optarg << "\n";
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
+            case 's': {
+                try {
+                    int value = std::stoi(optarg);
+                    if (value <= 0) {
+                        throw std::invalid_argument("non-positive value");
+                    }
+                    num_steps = value;
+                    printf("num_steps: %d\n", num_steps);
+                } catch (const std::exception& e) {
+                    std::cerr << "Invalid number of steps for -s: " << optarg << "\n";
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
             default:
                 std::cerr << "Unknown option: " << c << "\n";
                 return EXIT_FAILURE;
@@ -79,7 +109,7 @@ int main(int argc, char **argv) {
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < num_atoms; ++i) {
         // Placing particles along a 1D line (e.g., x-axis)
         // system.addParticle(1.0, 1.0, i * 3.0, 1.0, 0.0);  // (mass, x, y, z)
         int x = rand()%500;
@@ -119,13 +149,13 @@ int main(int argc, char **argv) {
     // XYZWriter trajectoryWriter("trajectory.xyz");
 
     // Run the simulation and write trajectory
-    const int numSteps = 1;
-    const int outputInterval = 100; // Output every 100 steps
+    // const int numSteps = 1;
+    const int output_interval = 100; // Output every 100 steps
 
-    for (int step = 0; step < numSteps; ++step) {
+    for (int step = 0; step < num_steps; ++step) {
         // context.step();
          context.runSimulation(1);
-        if (step % outputInterval == 0) {
+        if (step % output_interval == 0) {
             // trajectoryWriter.writeFrame(system); // Write the current frame
         }
     }
