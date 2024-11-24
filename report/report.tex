@@ -11,6 +11,8 @@
 \usepackage{url}
 \usepackage{float}
 \usepackage{subcaption}
+\usepackage{listings}
+
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 %\usepackage[T1]{fontenc}%
@@ -92,6 +94,12 @@ used by the molecular engine to ensure that the predicted behavior corresponds t
 
 In this paper, we set out to write and parallelize a molecular dynamics engine, which is able to simulate some of the
 fores of the system.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/verlet_concept.png}
+    \caption{Conceptual visualization of the core concept behind molecular dynamics}
+\end{figure}
 
 I LOVE OPENMM.\cite{eastman2010openmm}
 
@@ -271,18 +279,60 @@ Because the Verlet algorithm calculates positions and approximates velocities at
 efficient computation without sacrificing accuracy in simulations of large molecular systems.
 
 
- 
-% \textbf{Harmonic Bond Forces}:
-
-% \textbf{Van Der Waals Forces}:
-
-% \textbf{Electrostatic Forces}:
-
-% \textbf{Verlet Integrator}:
-
 
 
 \section{Parallelization}
+\section{Results}
+In this section, the results of the parallelization strategies will be reported. In order to gain deeper insight into
+the performance of the program, a benchmark was performed on different levels of detail. This allows for a more
+comprehensive discussion about potential bottlenecks and areas for future work. More specifically, traditional
+metrics such as speedup and efficiency were employed to analyze the overall performance of the program. Besides this,
+more fine-grained benchmarking was done to gain more insight into how each of the force types performed on an
+individual level.
+
+    \subsection{Force Type Parallelization}
+    In the following subsections, we will analyze the performance of the program per force type calculation. By
+    individually studying each of the implemented force types, a deeper understanding can be gained. A range of 
+    systems of different size will be studied.
+
+
+        \subsubsection{Electrostatic Interaction}
+        In Fig. \ref{fig:electro-speedup}, the speedup for a range of different systems is displayed. We can clearly
+        see a ... for small systems and ..... for larger systems
+        \begin{figure}[H]
+            \centering
+            \fbox{\textbf{[Image Placeholder]}} % This creates a placeholder box with text
+            \caption{Speedup of a range of systems containing only electrostatic interaction in function of the number 
+            of threads.}\label{fig:electro-speedup}
+        \end{figure}
+
+
+        \subsubsection{Dispersion Interaction}
+        In Fig. \ref{fig:dispersion-speedup}, the speedup for a range of different systems is displayed. We can clearly
+        see a ... for small systems and ..... for larger systems
+        \begin{figure}[H]
+            \centering
+            \fbox{\textbf{[Image Placeholder]}} % This creates a placeholder box with text
+            \caption{Speedup of a range of systems containing only dispersion interaction in function of the number 
+            of threads.}\label{fig:dispersion-speedup}
+        \end{figure}
+
+        \subsubsection{Bonded Interaction}
+        In Fig. \ref{fig:bonded-speedup}, the speedup for a range of different systems is displayed. We can clearly
+        see a ... for small systems and ..... for larger systems
+        \begin{figure}[H]
+            \centering
+            \fbox{\textbf{[Image Placeholder]}} % This creates a placeholder box with text
+            \caption{Speedup of a range of systems containing only bonded interaction in function of the number 
+            of threads.}\label{fig:bonded-speedup}
+        \end{figure}
+    
+    \subsection{Nested Parallelization}
+    In this subsection, the nested parallelism over the different force types will be studied. To be honest this will
+    be a bit more complicated to write about, or too simple to write much about, not sure yet. Let's discuss this
+    after we get the results
+
+\section{Discussion}
 
 
 
