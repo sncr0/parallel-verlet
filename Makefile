@@ -11,7 +11,7 @@ OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
 
 # Compiler settings
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic -O2 -fopenmp
+CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic -O2 -g -fopenmp
 LDFLAGS = -fopenmp
 
 # Output binary
