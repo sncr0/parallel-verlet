@@ -104,54 +104,6 @@ fores of the system.
 I LOVE OPENMM.\cite{eastman2010openmm}
 
 
-\section{Literature Review}
-
-    \subsection{Spatial Decomposition Methods}
-
-        \subsubsection{Domain Decomposition}
-        Spatial decomposition methods are a fundamental approach to parallelizing MD simulations. The central idea is to 
-        split the simulation region into boxes that are then independently processed. The volume of
-        these boxes is chosen such that the load between the cores is optimally balanced. More modern approaches often
-        tackle this issue in a dynamic fashion, by readjusting the boxes as the simulation progresses.
-
-
-        Each of the processors is responsible for simulating the behavior of the particles in that region. One of the main
-        challenges of this approach is how the interfaces between the subdivisions are handled. 
-
-        \subsubsection{Neighbor Lists}
-        Neighbor list is another spatial decomposition approach that can be used to parallelize MD simulations. The
-        core idea is to maintain a list of potential interaction partners for each particle in the system. This
-        significantly reduces the time complexity, given that the algorithm no longer needs to iterate over all
-        atom pairs ($O(N)$), but only needs to iterate over the neighbor list for each particle ($O(N)$). These
-        techniques are especially relevant for short-range non-bonded interactions.
-
-
-
-    \subsection{Force Decomposition Methods}
-    % Because classical molecular dynamics are based on Newton's third law of motion, a skew-symmetric
-    % force matrix $f$ can be defined as follows
-    % \begin{align*}
-    %         f =
-    %         \begin{bmatrix}
-    %         0 & f_{12} & f_{13} & \cdots & f_{1N} \\
-    %         -f_{12} & 0 & f_{23} & \cdots & f_{2N} \\
-    %         -f_{13} & -f_{23} & 0 & \cdots & f_{3N} \\
-    %         \vdots & \vdots & \vdots & \ddots & \vdots \\
-    %         -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
-    %         \end{bmatrix}  
-    % \end{align*}
-    % of which only the upper or lower triangular portion needs to be calculated.
-    % This allows for decomposition based on the interactions between particle pairs. 
-    PME methods, .... not sure if this falls under the category of parallelization strategies, more like
-    algorithmic strategies I guess
-
-    \subsubsection{Bonded Interactions}
-        \subsection{Particle Decomposition Methods}
-        \subsubsection{Atom Decomposition}
-        This approach generally uses systolic topology for interprocessor communication when replicated data is not 
-        possible in each processor
-
-\subsection{Hybrid Parallelization Approaches}
 
 \section{Molecular Dynamics Engine}
 
@@ -279,7 +231,63 @@ Because the Verlet algorithm calculates positions and approximates velocities at
 efficient computation without sacrificing accuracy in simulations of large molecular systems.
 
 
+\section{Literature Review}
+    Molecular dynamics is a concept that is inherently very suited to parallelization. Because the forces that
+    drive the behavior of the system are comprised of the sum of interactions between sets of particles, a parallelization
+    can be performed over these interactions. Moreover, because the technique is inherently an approximative technique,
+    there is lots of freedom to further optimize the calculations by using smart approximative algorithms. 
 
+    In general, there are two main approaches that can be taken to improve the performance of the
+    simulation engine. Spatial decomposition techniques split the simulation space up and improve performance by
+    processing these subregions in parallel. Force decomposition techniques are approximations based on physical grounds
+    that improve performance by reducing number of interaction pairs that need to be studies.
+
+    \subsection{Spatial Decomposition Methods}
+
+        \subsubsection{Domain Decomposition}
+        Spatial decomposition methods are a fundamental approach to parallelizing MD simulations. The central idea is to 
+        split the simulation region into boxes that are then independently processed. The volume of
+        these boxes is chosen such that the load between the cores is optimally balanced. More modern approaches often
+        tackle this issue in a dynamic fashion, by readjusting the boxes as the simulation progresses.
+
+
+        Each of the processors is responsible for simulating the behavior of the particles in that region. One of the main
+        challenges of this approach is how the interfaces between the subdivisions are handled. 
+
+        \subsubsection{Neighbor Lists}
+        Neighbor list is another spatial decomposition approach that can be used to parallelize MD simulations. The
+        core idea is to maintain a list of potential interaction partners for each particle in the system. This
+        significantly reduces the time complexity, given that the algorithm no longer needs to iterate over all
+        atom pairs ($O(N)$), but only needs to iterate over the neighbor list for each particle ($O(N)$). These
+        techniques are especially relevant for short-range non-bonded interactions.
+
+
+
+    \subsection{Force Decomposition Methods}
+    % Because classical molecular dynamics are based on Newton's third law of motion, a skew-symmetric
+    % force matrix $f$ can be defined as follows
+    % \begin{align*}
+    %         f =
+    %         \begin{bmatrix}
+    %         0 & f_{12} & f_{13} & \cdots & f_{1N} \\
+    %         -f_{12} & 0 & f_{23} & \cdots & f_{2N} \\
+    %         -f_{13} & -f_{23} & 0 & \cdots & f_{3N} \\
+    %         \vdots & \vdots & \vdots & \ddots & \vdots \\
+    %         -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
+    %         \end{bmatrix}  
+    % \end{align*}
+    % of which only the upper or lower triangular portion needs to be calculated.
+    % This allows for decomposition based on the interactions between particle pairs. 
+    PME methods, .... not sure if this falls under the category of parallelization strategies, more like
+    algorithmic strategies I guess
+
+    \subsubsection{Bonded Interactions}
+        \subsection{Particle Decomposition Methods}
+        \subsubsection{Atom Decomposition}
+        This approach generally uses systolic topology for interprocessor communication when replicated data is not 
+        possible in each processor
+
+\subsection{Hybrid Parallelization Approaches}
 
 \section{Parallelization}
 \section{Results}
