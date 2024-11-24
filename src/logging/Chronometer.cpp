@@ -10,7 +10,10 @@ void Chronometer::end(const std::string& tag, int thread_id) {
     auto endTime = std::chrono::high_resolution_clock::now();
 
     // Check if the tag exists in startTimes
-    if (timings_map.find(tag) != timings_map.end()) {
+    if (timings_map.find(tag) != timings_map.end() &&
+        timings_map[tag].find(thread_id) != timings_map[tag].end() &&
+        !timings_map[tag][thread_id].empty()) {
+            
         timings_map[tag][thread_id].back().end = endTime;
         timings_map[tag][thread_id].back().duration_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - timings_map[tag][thread_id].back().start);
         timings_map[tag][thread_id].back().duration_us = std::chrono::duration_cast<std::chrono::microseconds>(endTime - timings_map[tag][thread_id].back().start);
