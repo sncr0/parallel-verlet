@@ -306,7 +306,8 @@ force matrix $f$
         \end{bmatrix}  
 \end{align*}
 of which only the upper or lower triangular portion needs to be calculated. This loop is parallelized using a
-\verb|collapse(2)| clause, which can since deal with non-rectangular loops since OpenMP 5.1.
+\verb|collapse(2)| clause, which can since deal with non-rectangular loops since OpenMP 5.1. Additionally, local 
+force arrays are created during the force 
 
 \section{Results}
 In this section, the results of the parallelization strategies will be reported. In order to gain deeper insight into
