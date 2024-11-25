@@ -290,10 +290,22 @@ efficient computation without sacrificing accuracy in simulations of large molec
 \subsection{Hybrid Parallelization Approaches}
 
 \section{Parallelization}
+
+\subsection{Electrostatic Forces}
 In general, the non-bonded interactions (i.e.\ the electrostatic interaction and the dispersion interaction) usually
 take up the majority of the time for classical molecular dynamics simulations. This is because these interactions are
 two-particle interactions, which would naively require a double loop over all particles resulting in an $O(N^2)$
-time complexity. However, because of Newton's third law of motion, we can leverage the concept of a skew-symmetric 
+time complexity. 
+\begin{lstlisting}
+    compute(system):
+        for particles in system:
+            for particles in system:
+                - calculate distance
+                - compute electrostatic force
+    \end{lstlisting}
+
+
+However, because of Newton's third law of motion, we can leverage the concept of a skew-symmetric 
 force matrix $f$
 \begin{align*}
         f =
@@ -305,10 +317,28 @@ force matrix $f$
         -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
         \end{bmatrix}  
 \end{align*}
-of which only the upper or lower triangular portion needs to be calculated. This loop is parallelized using a
+of which only the upper or lower triangular portion needs to be calculated.
+\begin{lstlisting}
+compute(system):
+    for particle pairs in system:
+            - calculate distance
+            - compute electrostatic force
+\end{lstlisting}
+
+This loop is parallelized using a
 \verb|collapse(2)| clause, which can since deal with non-rectangular loops since OpenMP 5.1. Additionally, local 
 force arrays are created during the force 
+\begin{lstlisting}
+compute(system):
+    #pragma omp for collapse(2)
+    for particle pairs in system:
+            - calculate distance
+            - compute electrostatic force
+            - store in local force array
 
+    #pragma omp critical
+    - merge local force arrays
+    \end{lstlisting}
 \section{Results}
 In this section, the results of the parallelization strategies will be reported. In order to gain deeper insight into
 the performance of the program, a benchmark was performed on different levels of detail. This allows for a more
@@ -328,7 +358,7 @@ individual level.
         see a ... for small systems and ..... for larger systems
         \begin{figure}[H]
             \centering
-            \fbox{\textbf{[Image Placeholder]}} % This creates a placeholder box with text
+            \includegraphics[width=\linewidth]{./images/electrostatic_scaling.png} % This creates a placeholder box with text
             \caption{Speedup of a range of systems containing only electrostatic interaction in function of the number 
             of threads.}\label{fig:electro-speedup}
         \end{figure}
