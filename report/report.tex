@@ -290,6 +290,24 @@ efficient computation without sacrificing accuracy in simulations of large molec
 \subsection{Hybrid Parallelization Approaches}
 
 \section{Parallelization}
+In general, the non-bonded interactions (i.e.\ the electrostatic interaction and the dispersion interaction) usually
+take up the majority of the time for classical molecular dynamics simulations. This is because these interactions are
+two-particle interactions, which would naively require a double loop over all particles resulting in an $O(N^2)$
+time complexity. However, because of Newton's third law of motion, we can leverage the concept of a skew-symmetric 
+force matrix $f$
+\begin{align*}
+        f =
+        \begin{bmatrix}
+        0 & f_{12} & f_{13} & \cdots & f_{1N} \\
+        -f_{12} & 0 & f_{23} & \cdots & f_{2N} \\
+        -f_{13} & -f_{23} & 0 & \cdots & f_{3N} \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
+        \end{bmatrix}  
+\end{align*}
+of which only the upper or lower triangular portion needs to be calculated. This loop is parallelized using a
+\verb|collapse(2)| clause, which can since deal with non-rectangular loops since OpenMP 5.1.
+
 \section{Results}
 In this section, the results of the parallelization strategies will be reported. In order to gain deeper insight into
 the performance of the program, a benchmark was performed on different levels of detail. This allows for a more
