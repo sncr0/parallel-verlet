@@ -18,12 +18,13 @@
 
 int main(int argc, char **argv) {
     int c;
-    int harmonic_bond_threads = 1;
+    int harmonic_bond_threads = 0;
     int electrostatic_bond_threads = 0;
+    int dispersion_force_threads = 0;
     int num_atoms = 1;
     int num_steps = 1;
 
-    while ((c = getopt(argc, argv, "vh:e:n:s:")) != -1) {
+    while ((c = getopt(argc, argv, "vh:e:n:d:s:")) != -1) {
         switch (c) {
             case 'v':
                 setVerboseFlag(1);
@@ -31,7 +32,7 @@ int main(int argc, char **argv) {
             case 'h': {
                 try {
                     int value = std::stoi(optarg);
-                    if (value <= 0) {
+                    if (value < 0) {
                         throw std::invalid_argument("non-positive value");
                     }
                     harmonic_bond_threads = value;
@@ -45,13 +46,27 @@ int main(int argc, char **argv) {
             case 'e': {
                 try {
                     int value = std::stoi(optarg);
-                    if (value <= 0) {
+                    if (value < 0) {
                         throw std::invalid_argument("non-positive value");
                     }
                     electrostatic_bond_threads = value;
                     printf("electrostatic_bond_threads: %d\n", electrostatic_bond_threads);
                 } catch (const std::exception& e) {
                     std::cerr << "Invalid number of threads for -e: " << optarg << "\n";
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
+            case 'd': {
+                try {
+                    int value = std::stoi(optarg);
+                    if (value < 0) {
+                        throw std::invalid_argument("non-positive value");
+                    }
+                    dispersion_force_threads = value;
+                    printf("dispersion_force_threads: %d\n", dispersion_force_threads);
+                } catch (const std::exception& e) {
+                    std::cerr << "Invalid number of threads for -d: " << optarg << "\n";
                     return EXIT_FAILURE;
                 }
                 break;
@@ -93,7 +108,7 @@ int main(int argc, char **argv) {
     Chronometer chronometer;
 
     // chronometer.start("system_creation");
-    ThreadManager thread_manager(harmonic_bond_threads, 1, electrostatic_bond_threads);
+    ThreadManager thread_manager(harmonic_bond_threads, dispersion_force_threads, electrostatic_bond_threads);
 
     System system;
     // system.addParticle(1.0, 1.0, 0.0, 0.0, 0.0);
@@ -105,7 +120,12 @@ int main(int argc, char **argv) {
 
     auto electrostatic_force = std::make_shared<ElectrostaticForce>(1.0);
     electrostatic_force->num_threads = electrostatic_bond_threads;
-    integrator.addForce(electrostatic_force);
+    // integrator.addForce(electrostatic_force);
+
+    auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
+    ljForce->num_threads = dispersion_force_threads;
+    integrator.addForce(ljForce);
+
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
 

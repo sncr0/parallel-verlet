@@ -11,7 +11,7 @@ void LennardJonesForce::compute_parallel(System& system, std::vector<std::array<
     // size_t numParticles = system.getNumParticles();
     VERBOSE("Computing dispersion forces\n");
     printf("Computing dispersion forces in parallel\n");
-    chronometer.start("dispersion_force_glob");
+    // chronometer.start("dispersion_force_glob");
 
     int num_threads = thread_manager.lennard_jones_threads;
     size_t num_particles = forces.size();
@@ -49,7 +49,7 @@ void LennardJonesForce::compute_parallel(System& system, std::vector<std::array<
     #pragma omp parallel num_threads(num_threads)
     {
         int thread_id = omp_get_thread_num();
-        chronometer.start("dispersion_force", thread_id);
+        // chronometer.start("dispersion_force", thread_id);
         std::vector<double> thread_local_forces_x(num_particles, 0.0);
         std::vector<double> thread_local_forces_y(num_particles, 0.0);
         std::vector<double> thread_local_forces_z(num_particles, 0.0);
@@ -117,11 +117,11 @@ void LennardJonesForce::compute_parallel(System& system, std::vector<std::array<
             forces[particle_index][2] += thread_local_forces_z[particle_index];
         }
 
-        chronometer.end("dispersion_force", thread_id);
-        chronometer.printTiming("dispersion_force", "ms", thread_id);
+        // chronometer.end("dispersion_force", thread_id);
+        // chronometer.printTiming("dispersion_force", "ms", thread_id);
     }
-    chronometer.end("dispersion_force_glob");
-    chronometer.printTiming("dispersion_force_glob", "ms");
+    // chronometer.end("dispersion_force_glob");
+    // chronometer.printTiming("dispersion_force_glob", "ms");
 }
 
 
@@ -132,7 +132,7 @@ void LennardJonesForce::compute(System& system,
     VERBOSE("Computing dispersion forces\n");
     printf("Computing dispersion forces sequentially\n");
 
-    chronometer.start("dispersion_force_glob");
+    // chronometer.start("dispersion_force_glob");
 
     // Create thread-local forces arrays
     size_t num_particles = forces.size();
@@ -143,7 +143,7 @@ void LennardJonesForce::compute(System& system,
     // #pragma omp parallel num_threads(num_threads)
     // {
         // int thread_id = omp_get_thread_num();
-        chronometer.start("dispersion_force", 0);
+        // chronometer.start("dispersion_force", 0);
         // std::vector<double> thread_local_forces_x(num_particles, 0.0);
         // std::vector<double> thread_local_forces_y(num_particles, 0.0);
         // std::vector<double> thread_local_forces_z(num_particles, 0.0);
@@ -211,14 +211,14 @@ void LennardJonesForce::compute(System& system,
         //     forces[particle_index][2] += thread_local_forces_z[particle_index];
         // }
 
-        chronometer.end("dispersion_force", 0);
-        chronometer.printTiming("dispersion_force", "ms", 0);
+        // chronometer.end("dispersion_force", 0);
+        // chronometer.printTiming("dispersion_force", "ms", 0);
     // }
 
     // Combine thread-local forces into the shared forces array
     // #pragma omp parallel for num_threads(num_threads)
 
 
-    chronometer.end("dispersion_force_glob");
-    chronometer.printTiming("dispersion_force_glob", "ms");
+    // chronometer.end("dispersion_force_glob");
+    // chronometer.printTiming("dispersion_force_glob", "ms");
 }
