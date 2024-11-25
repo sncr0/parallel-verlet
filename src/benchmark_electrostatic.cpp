@@ -120,11 +120,11 @@ int main(int argc, char **argv) {
 
     auto electrostatic_force = std::make_shared<ElectrostaticForce>(1.0);
     electrostatic_force->num_threads = electrostatic_bond_threads;
-    // integrator.addForce(electrostatic_force);
+    integrator.addForce(electrostatic_force);
 
     auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
     ljForce->num_threads = dispersion_force_threads;
-    integrator.addForce(ljForce);
+    // integrator.addForce(ljForce);
 
     // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
