@@ -88,7 +88,8 @@ void VerletIntegrator::step(System& system) {
 
     // Step 2: Calculate new forces at new positions
     std::vector<std::array<double, 3>> new_forces(numParticles, {0.0, 0.0, 0.0});
-    #pragma omp parallel num_threads(2)
+    int num_threads = thread_manager.nested_threads;
+    #pragma omp parallel num_threads(num_threads)
     {
         std::vector<std::array<double, 3>> new_forces_thread(numParticles, {0.0, 0.0, 0.0});
         #pragma omp for

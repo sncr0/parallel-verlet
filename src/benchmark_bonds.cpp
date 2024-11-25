@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
     Chronometer chronometer;
 
     // chronometer.start("system_creation");
-    ThreadManager thread_manager(harmonic_bond_threads, dispersion_force_threads, electrostatic_bond_threads);
+    ThreadManager thread_manager(harmonic_bond_threads, dispersion_force_threads, electrostatic_bond_threads, 0);
 
     System system;
     // system.addParticle(1.0, 1.0, 0.0, 0.0, 0.0);

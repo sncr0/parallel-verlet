@@ -21,10 +21,11 @@ int main(int argc, char **argv) {
     int harmonic_bond_threads = 0;
     int electrostatic_bond_threads = 0;
     int dispersion_force_threads = 0;
+    int nested_threads = 0;
     int num_atoms = 1;
     int num_steps = 1;
 
-    while ((c = getopt(argc, argv, "vh:e:n:d:s:")) != -1) {
+    while ((c = getopt(argc, argv, "vh:e:n:d:s:l:")) != -1) {
         switch (c) {
             case 'v':
                 setVerboseFlag(1);
@@ -85,6 +86,20 @@ int main(int argc, char **argv) {
                 }
                 break;
             }
+            case 'l': {
+                try {
+                    int value = std::stoi(optarg);
+                    if (value < 0) {
+                        throw std::invalid_argument("non-positive value");
+                    }
+                    nested_threads = value;
+                    printf("nested_threads: %d\n", nested_threads);
+                } catch (const std::exception& e) {
+                    std::cerr << "Invalid number of threads for -l: " << optarg << "\n";
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
             case 's': {
                 try {
                     int value = std::stoi(optarg);
@@ -108,7 +123,8 @@ int main(int argc, char **argv) {
     Chronometer chronometer;
 
     // chronometer.start("system_creation");
-    ThreadManager thread_manager(harmonic_bond_threads, dispersion_force_threads, electrostatic_bond_threads, 0);
+    ThreadManager thread_manager(harmonic_bond_threads, dispersion_force_threads, electrostatic_bond_threads,
+                                 nested_threads);   
 
     System system;
     // system.addParticle(1.0, 1.0, 0.0, 0.0, 0.0);
@@ -121,6 +137,14 @@ int main(int argc, char **argv) {
     auto electrostatic_force = std::make_shared<ElectrostaticForce>(1.0);
     electrostatic_force->num_threads = electrostatic_bond_threads;
     integrator.addForce(electrostatic_force);
+
+    auto electrostatic_force2 = std::make_shared<ElectrostaticForce>(1.0);
+    electrostatic_force2->num_threads = electrostatic_bond_threads;
+    integrator.addForce(electrostatic_force2);
+
+    auto electrostatic_force3 = std::make_shared<ElectrostaticForce>(1.0);
+    electrostatic_force3->num_threads = electrostatic_bond_threads;
+    integrator.addForce(electrostatic_force3);
 
     auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
     ljForce->num_threads = dispersion_force_threads;
