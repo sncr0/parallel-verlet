@@ -29,6 +29,10 @@ public:
                     ThreadManager& thread_manager,
                     Chronometer& chronometer) const override;
 
+    void compute_parallel(System& system, std::vector<std::array<double, 3>>& forces, 
+                            ThreadManager& thread_manager,
+                            Chronometer& chronometer) const override;
+                            
 private:
     double springConstant;
     double equilibriumDistance;

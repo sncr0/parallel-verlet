@@ -11,6 +11,8 @@
 \usepackage{url}
 \usepackage{float}
 \usepackage{subcaption}
+\usepackage{listings}
+
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 %\usepackage[T1]{fontenc}%
@@ -93,7 +95,15 @@ used by the molecular engine to ensure that the predicted behavior corresponds t
 In this paper, we set out to write and parallelize a molecular dynamics engine, which is able to simulate some of the
 fores of the system.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/verlet_concept.png}
+    \caption{Conceptual visualization of the core concept behind molecular dynamics}
+\end{figure}
+
 I LOVE OPENMM.\cite{eastman2010openmm}
+
+
 
 \section{Molecular Dynamics Engine}
 
@@ -197,10 +207,6 @@ with the forces acting on them. The formula is given as follows:
     \mathbf{r}_i(t + \Delta t) &= 2\mathbf{r}_i(t) - \mathbf{r}_i(t - \Delta t) + \Delta t^2 \cdot \frac{\mathbf{F}(t)}{m},
 \end{align}
 
-\begin{align}
-    m_i \frac{d^2\mathbf{r}_i}{dt^2} = \mathbf{f}_i = -\frac{\delta}{\delta \mathbf{r}_i}V(\mathbf{r}_1,\mathbf{r}_2,\ldots,\mathbf{r}_N)
-\end{align}
-
 where \( \mathbf{r}(t) \) is the position of the particle at time \( t \), \( \Delta t \) is the integration time 
 step, \( \mathbf{F}(t) \) is the force acting on the particle at time \( t \), and \( m \) is the particle's mass.
 
@@ -221,21 +227,169 @@ compute velocities. However, velocities can still be calculated as a midpoint ap
 %     \item Non-bonded interactions like Lennard-Jones and Coulombic potentials (e.g., \( V_{\mathrm{dispersion}}, V_{\mathrm{electrostatic}} \)).
 % \end{itemize}
 
-Because the Verlet algorithm calculates positions and approximates velocities at a single time step, it allows for efficient computation without sacrificing accuracy in simulations of large molecular systems.
+Because the Verlet algorithm calculates positions and approximates velocities at a single time step, it allows for 
+efficient computation without sacrificing accuracy in simulations of large molecular systems.
 
 
- 
-% \textbf{Harmonic Bond Forces}:
+\section{Literature Review}
+    Molecular dynamics is a concept that is inherently very suited to parallelization. Because the forces that
+    drive the behavior of the system are comprised of the sum of interactions between sets of particles, a parallelization
+    can be performed over these interactions. Moreover, because the technique is inherently an approximative technique,
+    there is lots of freedom to further optimize the calculations by using smart approximative algorithms. 
 
-% \textbf{Van Der Waals Forces}:
+    In general, there are two main approaches that can be taken to improve the performance of the
+    simulation engine. Spatial decomposition techniques split the simulation space up and improve performance by
+    processing these subregions in parallel. Force decomposition techniques are approximations based on physical grounds
+    that improve performance by reducing number of interaction pairs that need to be studies.
 
-% \textbf{Electrostatic Forces}:
+    \subsection{Spatial Decomposition Methods}
 
-% \textbf{Verlet Integrator}:
+        \subsubsection{Domain Decomposition}
+        Spatial decomposition methods are a fundamental approach to parallelizing MD simulations. The central idea is to 
+        split the simulation region into boxes that are then independently processed. The volume of
+        these boxes is chosen such that the load between the cores is optimally balanced. More modern approaches often
+        tackle this issue in a dynamic fashion, by readjusting the boxes as the simulation progresses.
 
 
+        Each of the processors is responsible for simulating the behavior of the particles in that region. One of the main
+        challenges of this approach is how the interfaces between the subdivisions are handled. 
+
+        \subsubsection{Neighbor Lists}
+        Neighbor list is another spatial decomposition approach that can be used to parallelize MD simulations. The
+        core idea is to maintain a list of potential interaction partners for each particle in the system. This
+        significantly reduces the time complexity, given that the algorithm no longer needs to iterate over all
+        atom pairs ($O(N)$), but only needs to iterate over the neighbor list for each particle ($O(N)$). These
+        techniques are especially relevant for short-range non-bonded interactions.
+
+
+
+    \subsection{Force Decomposition Methods}
+    % Because classical molecular dynamics are based on Newton's third law of motion, a skew-symmetric
+    % force matrix $f$ can be defined as follows
+    % \begin{align*}
+    %         f =
+    %         \begin{bmatrix}
+    %         0 & f_{12} & f_{13} & \cdots & f_{1N} \\
+    %         -f_{12} & 0 & f_{23} & \cdots & f_{2N} \\
+    %         -f_{13} & -f_{23} & 0 & \cdots & f_{3N} \\
+    %         \vdots & \vdots & \vdots & \ddots & \vdots \\
+    %         -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
+    %         \end{bmatrix}  
+    % \end{align*}
+    % of which only the upper or lower triangular portion needs to be calculated.
+    % This allows for decomposition based on the interactions between particle pairs. 
+    PME methods, .... not sure if this falls under the category of parallelization strategies, more like
+    algorithmic strategies I guess
+
+    \subsubsection{Bonded Interactions}
+        \subsection{Particle Decomposition Methods}
+        \subsubsection{Atom Decomposition}
+        This approach generally uses systolic topology for interprocessor communication when replicated data is not 
+        possible in each processor
+
+\subsection{Hybrid Parallelization Approaches}
 
 \section{Parallelization}
+
+\subsection{Electrostatic Forces}
+In general, the non-bonded interactions (i.e.\ the electrostatic interaction and the dispersion interaction) usually
+take up the majority of the time for classical molecular dynamics simulations. This is because these interactions are
+two-particle interactions, which would naively require a double loop over all particles resulting in an $O(N^2)$
+time complexity. 
+\begin{lstlisting}
+    compute(system):
+        for particles in system:
+            for particles in system:
+                - calculate distance
+                - compute electrostatic force
+    \end{lstlisting}
+
+
+However, because of Newton's third law of motion, we can leverage the concept of a skew-symmetric 
+force matrix $f$
+\begin{align*}
+        f =
+        \begin{bmatrix}
+        0 & f_{12} & f_{13} & \cdots & f_{1N} \\
+        -f_{12} & 0 & f_{23} & \cdots & f_{2N} \\
+        -f_{13} & -f_{23} & 0 & \cdots & f_{3N} \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
+        \end{bmatrix}  
+\end{align*}
+of which only the upper or lower triangular portion needs to be calculated.
+\begin{lstlisting}
+compute(system):
+    for particle pairs in system:
+            - calculate distance
+            - compute electrostatic force
+\end{lstlisting}
+
+This loop is parallelized using a
+\verb|collapse(2)| clause, which can since deal with non-rectangular loops since OpenMP 5.1. Additionally, local 
+force arrays are created during the force 
+\begin{lstlisting}
+compute(system):
+    #pragma omp for collapse(2)
+    for particle pairs in system:
+            - calculate distance
+            - compute electrostatic force
+            - store in local force array
+
+    #pragma omp critical
+    - merge local force arrays
+    \end{lstlisting}
+\section{Results}
+In this section, the results of the parallelization strategies will be reported. In order to gain deeper insight into
+the performance of the program, a benchmark was performed on different levels of detail. This allows for a more
+comprehensive discussion about potential bottlenecks and areas for future work. More specifically, traditional
+metrics such as speedup and efficiency were employed to analyze the overall performance of the program. Besides this,
+more fine-grained benchmarking was done to gain more insight into how each of the force types performed on an
+individual level.
+
+    \subsection{Force Type Parallelization}
+    In the following subsections, we will analyze the performance of the program per force type calculation. By
+    individually studying each of the implemented force types, a deeper understanding can be gained. A range of 
+    systems of different size will be studied.
+
+
+        \subsubsection{Electrostatic Interaction}
+        In Fig. \ref{fig:electro-speedup}, the speedup for a range of different systems is displayed. We can clearly
+        see a ... for small systems and ..... for larger systems
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\linewidth]{./images/electrostatic_scaling.png} % This creates a placeholder box with text
+            \caption{Speedup of a range of systems containing only electrostatic interaction in function of the number 
+            of threads.}\label{fig:electro-speedup}
+        \end{figure}
+
+
+        \subsubsection{Dispersion Interaction}
+        In Fig. \ref{fig:dispersion-speedup}, the speedup for a range of different systems is displayed. We can clearly
+        see a ... for small systems and ..... for larger systems
+        \begin{figure}[H]
+            \centering
+            \fbox{\textbf{[Image Placeholder]}} % This creates a placeholder box with text
+            \caption{Speedup of a range of systems containing only dispersion interaction in function of the number 
+            of threads.}\label{fig:dispersion-speedup}
+        \end{figure}
+
+        \subsubsection{Bonded Interaction}
+        In Fig. \ref{fig:bonded-speedup}, the speedup for a range of different systems is displayed. We can clearly
+        see a ... for small systems and ..... for larger systems
+        \begin{figure}[H]
+            \centering
+            \fbox{\textbf{[Image Placeholder]}} % This creates a placeholder box with text
+            \caption{Speedup of a range of systems containing only bonded interaction in function of the number 
+            of threads.}\label{fig:bonded-speedup}
+        \end{figure}
+    
+    \subsection{Nested Parallelization}
+    In this subsection, the nested parallelism over the different force types will be studied. To be honest this will
+    be a bit more complicated to write about, or too simple to write much about, not sure yet. Let's discuss this
+    after we get the results
+
+\section{Discussion}
 
 
 

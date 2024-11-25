@@ -11,3 +11,6 @@ report/*.log
 report/*.out
 report/*.synctex.gz
 report/*.pdf
+*.csv
+.DS_Store
+results/*

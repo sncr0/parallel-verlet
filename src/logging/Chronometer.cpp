@@ -1,24 +1,41 @@
 #include "Chronometer.h"
 
+
 // Start timing a section of code
 void Chronometer::start(const std::string& tag, int thread_id) {
-    timings_map[tag][thread_id].push_back(Timing());
+    std::unique_lock lock(mtx_); // Write lock
+
+    // First, ensure the tag exists and get a reference to its thread map
+    auto& thread_map = timings_map[tag];
+    // Then, add the timing to the specific thread's vector
+    thread_map[thread_id].push_back(Timing());
 }
 
-// End timing a section of code
-void Chronometer::end(const std::string& tag, int thread_id) {
-    auto endTime = std::chrono::high_resolution_clock::now();
 
-    // Check if the tag exists in startTimes
-    if (timings_map.find(tag) != timings_map.end()) {
-        timings_map[tag][thread_id].back().end = endTime;
-        timings_map[tag][thread_id].back().duration_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - timings_map[tag][thread_id].back().start);
-        timings_map[tag][thread_id].back().duration_us = std::chrono::duration_cast<std::chrono::microseconds>(endTime - timings_map[tag][thread_id].back().start);
-        timings_map[tag][thread_id].back().duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - timings_map[tag][thread_id].back().start);
-        timings_map[tag][thread_id].back().duration_s = std::chrono::duration_cast<std::chrono::seconds>(endTime - timings_map[tag][thread_id].back().start);
-    } else {
+void Chronometer::end(const std::string& tag, int thread_id) {
+    std::unique_lock lock(mtx_); // Write lock
+
+    auto it = timings_map.find(tag);
+    if (it == timings_map.end()) {
         std::cerr << "Warning: Tag \"" << tag << "\" was not started!\n";
+        return;
     }
+
+    auto thread_it = it->second.find(thread_id);
+    if (thread_it == it->second.end() || thread_it->second.empty()) {
+        std::cerr << "Warning: No timing data for tag \"" << tag << "\" on thread " << thread_id << "!\n";
+        return;
+    }
+
+    auto& timing = thread_it->second.back();
+    timing.end = std::chrono::high_resolution_clock::now();
+    
+    // Calculate durations
+    auto duration = timing.end - timing.start;
+    timing.duration_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+    timing.duration_us = std::chrono::duration_cast<std::chrono::microseconds>(duration);
+    timing.duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+    timing.duration_s = std::chrono::duration_cast<std::chrono::seconds>(duration);
 }
 
 void Chronometer::printTiming(const std::string& tag, const std::string& timescale, int thread_id) const {

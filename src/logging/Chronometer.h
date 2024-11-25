@@ -8,6 +8,8 @@
 #include <iomanip>
 #include <vector>
 #include <map>
+#include <shared_mutex> // For std::shared_mutex
+#include <mutex>
 
 struct Timing {
     std::chrono::high_resolution_clock::time_point start;
@@ -32,6 +34,8 @@ private:
     // through timepoints and over threads, should maybe be dynamically allocated for number of threads
     // map < tag, map < thread_id, vector < Timing > > >
     std::unordered_map<std::string, std::unordered_map<int, std::vector<Timing>>> timings_map;
+    mutable std::shared_mutex mtx_; // Shared mutex for thread-safe read/write
+
 
 };
 

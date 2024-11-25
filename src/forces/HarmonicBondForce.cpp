@@ -120,3 +120,9 @@ void HarmonicBondForce::compute(System& system,
     printf("Time taken by harmonic bond force computation: %d ms\n", duration.count());
 }
 
+void HarmonicBondForce::compute_parallel(System& system, 
+                                            std::vector<std::array<double, 3>>& forces,
+                                            ThreadManager& thread_manager,
+                                            Chronometer& chronometer) const {
+                        
+}
