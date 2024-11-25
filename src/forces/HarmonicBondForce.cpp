@@ -38,6 +38,7 @@ void HarmonicBondForce::compute(System& system,
     
     #pragma omp parallel num_threads(num_threads)
     {
+        printf("%d", omp_get_num_threads());
         // int thread_id = omp_get_thread_num(); // Get the thread ID for the current thread
         // auto& thread_local_forces = local_forces[thread_id]; // Reference to this thread's local forces
         std::vector<std::array<double, 3>> thread_local_forces(num_particles, {0.0, 0.0, 0.0});

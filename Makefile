@@ -4,7 +4,7 @@ OBJ_DIR = obj
 BIN_DIR = bin
 
 # Define the main variants (without extensions)
-MAIN_VARIANTS = molecular_simulation benchmark_electrostatic benchmark_dispersion
+MAIN_VARIANTS = molecular_simulation benchmark_electrostatic benchmark_dispersion benchmark_bonds
 
 # List all common source files (excluding main.cpp)
 COMMON_SRC_FILES = $(filter-out $(SRC_DIR)/main.cpp, $(wildcard $(SRC_DIR)/**/*.cpp))
