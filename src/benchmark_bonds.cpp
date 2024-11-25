@@ -127,6 +127,7 @@ int main(int argc, char **argv) {
     // // integrator.addForce(ljForce);
 
     auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
+    hbForce1->num_threads = harmonic_bond_threads;
 
 
     for (int i = 0; i < num_atoms; ++i) {
