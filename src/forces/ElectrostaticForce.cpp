@@ -31,7 +31,6 @@ void ElectrostaticForce::compute_parallel(System& system,
 
     #pragma omp parallel num_threads(num_threads)
     {
-        std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
         int thread_id = omp_get_thread_num();
         // chronometer.start("electrostatic_force", thread_id);
         std::vector<double> thread_local_forces_x(num_particles, 0.0);
@@ -42,6 +41,7 @@ void ElectrostaticForce::compute_parallel(System& system,
         #pragma omp for collapse(2)
         for (size_t particle1_index = 0; particle1_index < num_particles; ++particle1_index) {
             for (size_t particle2_index = particle1_index + 1; particle2_index < num_particles; ++particle2_index) {
+                std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
                 Particle& particle1 = system.getParticle(particle1_index);
                 Particle& particle2 = system.getParticle(particle2_index);
 
