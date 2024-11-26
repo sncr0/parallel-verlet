@@ -40,11 +40,11 @@
  * - Handles multiple force components through the forces vector
  */
 
-VerletIntegrator::VerletIntegrator(double ts, 
-                                    ThreadManager& tm,
-                                    Chronometer& chrono) : timestep(ts), 
-                                                            thread_manager(tm),
-                                                            chronometer(chrono) {}
+VerletIntegrator::VerletIntegrator(double ts){}//, 
+                                    // ThreadManager& tm,
+                                    // Chronometer& chrono) : timestep(ts), 
+                                    //                         thread_manager(tm),
+                                    //                         chronometer(chrono) {}
 
 void VerletIntegrator::addForce(std::shared_ptr<Force> force) {
     forces.push_back(force);
@@ -58,11 +58,10 @@ void VerletIntegrator::step(System& system) {
         old_forces.resize(numParticles, {0.0, 0.0, 0.0});
         // Calculate initial forces
         for (const auto& force : forces) {
-            if (force->num_threads == 0) {
-                force->compute(system, old_forces, thread_manager, chronometer);
-            } else {
-                force->compute_parallel(system, old_forces, thread_manager, chronometer);
-            }
+                force->compute(system, old_forces); //, thread_manager, chronometer);
+            // } else {
+            //     force->compute_parallel(system, old_forces, thread_manager, chronometer);
+            // }
         }
         first_step = false;
     }
@@ -87,11 +86,11 @@ void VerletIntegrator::step(System& system) {
     // Step 2: Calculate new forces at new positions
     std::vector<std::array<double, 3>> new_forces(numParticles, {0.0, 0.0, 0.0});
     for (const auto& force : forces) {
-        if (force->num_threads == 0) {
-            force->compute(system, new_forces, thread_manager, chronometer);
-        } else {
-            force->compute_parallel(system, new_forces, thread_manager, chronometer);
-        }
+        // if (force->num_threads == 0) {
+            force->compute(system, new_forces); //, thread_manager, chronometer);
+        // } else {
+        //     force->compute_parallel(system, new_forces, thread_manager, chronometer);
+        // }
     }
 
     // Step 3: Complete velocity update with new forces

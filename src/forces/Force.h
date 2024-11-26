@@ -17,14 +17,15 @@ public:
      * @param forces - A reference to the forces array to update.
      */
     virtual void compute(System& system,
-                            std::vector<std::array<double, 3>>& forces,
-                            ThreadManager& thread_manager,
-                            Chronometer& chronometer) const = 0;
+                            std::vector<std::array<double, 3>>& forces)//,
+                            // ThreadManager& thread_manager,
+                            // Chronometer& chronometer)
+                             const = 0;
 
-    virtual void compute_parallel(System& system,
-                                    std::vector<std::array<double, 3>>& forces,
-                                    ThreadManager& thread_manager,
-                                    Chronometer& chronometer) const = 0;
+    // virtual void compute_parallel(System& system,
+    //                                 std::vector<std::array<double, 3>>& forces,
+    //                                 ThreadManager& thread_manager,
+    //                                 Chronometer& chronometer) const = 0;
 
     int num_threads = 1;
 

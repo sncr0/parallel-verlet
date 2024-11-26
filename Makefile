@@ -14,7 +14,7 @@ COMMON_OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(COMMON_SRC_FIL
 
 # Compiler settings
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic -O2 -g -fopenmp
+CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic -O2 -g
 LDFLAGS = -fopenmp
 
 # Targets for each variant
