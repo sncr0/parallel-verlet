@@ -31,6 +31,7 @@ void ElectrostaticForce::compute_parallel(System& system,
 
     #pragma omp parallel num_threads(num_threads)
     {
+        std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
         int thread_id = omp_get_thread_num();
         // chronometer.start("electrostatic_force", thread_id);
         std::vector<double> thread_local_forces_x(num_particles, 0.0);
@@ -80,6 +81,10 @@ void ElectrostaticForce::compute_parallel(System& system,
                 VERBOSE("forces: %f %f %f\n", force_x, force_y, force_z);
                 VERBOSE("positions 1: %f %f %f\n", particle1_pos[0], particle1_pos[1], particle1_pos[2]);
                 VERBOSE("positions 2: %f %f %f\n", particle2_pos[0], particle2_pos[1], particle2_pos[2]);
+
+                std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+                printf("Time to compute forces: %ld\n", time_span.count());
 
             }
         }

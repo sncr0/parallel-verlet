@@ -47,6 +47,7 @@ void HarmonicBondForce::compute_parallel(System& system,
 
         #pragma omp for
         for (size_t bondIdx = 0; bondIdx < num_bonds; ++bondIdx) {
+            std::chrono::high_resolution_clock::time_point start_loop_time = std::chrono::high_resolution_clock::now();
             // sleep 1 sec with c style code
 
             // #include <unistd.h>
@@ -95,6 +96,10 @@ void HarmonicBondForce::compute_parallel(System& system,
             thread_local_forces_x[particle2_index] += force_x;
             thread_local_forces_y[particle2_index] += force_y;
             thread_local_forces_z[particle2_index] += force_z;
+
+            std::chrono::high_resolution_clock::time_point end_loop_time = std::chrono::high_resolution_clock::now();
+            auto loop_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_loop_time - start_loop_time);
+            printf("Time to compute forces: %ld\n", loop_duration.count());
 
         }
 
