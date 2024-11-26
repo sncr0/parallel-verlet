@@ -79,7 +79,7 @@ void ElectrostaticForce::compute_parallel(System& system,
                 thread_local_forces_z[particle2_index] += force_z;
 
                 std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+                auto time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
                 printf("Time to compute forces: %ld\n", time_span.count());
 
                 VERBOSE("forces: %f %f %f\n", force_x, force_y, force_z);
