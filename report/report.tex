@@ -105,7 +105,7 @@ I LOVE OPENMM.\cite{eastman2010openmm}
 
 
 
-\section{Molecular Dynamics Engine}
+\section{Molecular Dynamics Engine}\label{md}
 
 Organic molecules and biological macromolecules are typically described with the following expression:
 \begin{equation}
@@ -242,6 +242,36 @@ efficient computation without sacrificing accuracy in simulations of large molec
     processing these subregions in parallel. Force decomposition techniques are approximations based on physical grounds
     that improve performance by reducing number of interaction pairs that need to be studies.
 
+    \subsection{Atom Decomposition}
+    In this approach, each of the $P$ processors are assigned a group of $N/P$ atoms. These atoms do not necessarily
+    need to have any spatial or other relation to each other. However, in order to update the positions of the atoms
+    in a processor $P_z$, it would require the positions of many atoms that are not contained in this processor
+    $P_z$. This requires each processor to receive updated positions of all other atoms that are interacting with
+    the atoms in $P_z$, in an operation referred to as all-to-all communication. This all-to-all communication incurs
+    a cost of $O(N)$.~\cite{plimpton1995fast, fox1989solving}
+    
+    The atom decomposition algorithms
+    spread the force calculations and integrations evenly across the processors. However, because of this global
+    communication, the algorithm does not scale well with the number of particles in the system. The main advantage
+    of these algorithms is their simplicity.~\cite{plimpton1995fast, fox1989solving}
+
+    \subsection{Force Decomposition}
+    % Force decomposition is based on the skew-symmetric force matrix arising from Newton's third law of motion. 
+    In force decomposition approaches, each of the $P$ processors are assigned to a block of particle pairs (instead
+    of particles themselves). In other words, the skew-symmetric force matrix $f$ that arises from Newton's third
+    law of motion is spread out over the processors:
+    \begin{align*}
+        f =
+        \begin{bmatrix}
+        0 & f_{12} & f_{13} & \cdots & f_{1N} \\
+        -f_{12} & 0 & f_{23} & \cdots & f_{2N} \\
+        -f_{13} & -f_{23} & 0 & \cdots & f_{3N} \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
+        \end{bmatrix}  
+    \end{align*}
+    Each processor is responsible for a sub-block of $f$ of size $N/\sqrt{P} \times N/\sqrt{P}$.
+    This allows for a reduction of the communication cost from $O(N)$ to $O(N/\sqrt{P})$. 
     \subsection{Spatial Decomposition Methods}
 
         \subsubsection{Domain Decomposition}
@@ -339,8 +369,47 @@ compute(system):
 
     #pragma omp critical
     - merge local force arrays
-    \end{lstlisting}
-\section{Results}
+\end{lstlisting}
+
+Because this loop is collapsed, the work across the iterations is uniform. Therefore, no schedule was needed to 
+obtain optimal performance (which is not possible either way with a collapsed non-rectangular loop). Alternative setups 
+with a schedule were also attempted, but the collapsed loop gave the best performance.
+
+\subsection{Dispersion Forces}
+This force type follows the same scheme as the electrostatic forces.
+
+\begin{lstlisting}
+compute(system):
+    #pragma omp for collapse(2)
+    for particle pairs in system:
+            - calculate distance
+            - compute dispersion force
+            - store in local force array
+
+    #pragma omp critical
+    - merge local force arrays
+\end{lstlisting}
+
+\subsection{Bonded Forces}
+The bonded forces represent the bonds between two particles. They are created at the system creation stage, and are
+stored in an \texttt{std::vector}. Besides this, the local force array concept is maintained from the non-bonded
+forces.
+\begin{lstlisting}
+    compute(system):
+        #pragma omp for
+        for bonds:
+            - calculate distance between 
+              particles in bond
+            - compute dispersion force
+            - store in local force array
+    
+        #pragma omp critical
+        - merge local force arrays
+\end{lstlisting}
+Again, because of the uniform work across all the iterations of the loops, introducing a schedule did not result in
+an increased performance due to the additional overhead.
+
+\section{Results}\label{res}
 In this section, the results of the parallelization strategies will be reported. In order to gain deeper insight into
 the performance of the program, a benchmark was performed on different levels of detail. This allows for a more
 comprehensive discussion about potential bottlenecks and areas for future work. More specifically, traditional
@@ -349,25 +418,38 @@ more fine-grained benchmarking was done to gain more insight into how each of th
 individual level.
 
     \subsection{Force Type Parallelization}
-    In the following subsections, we will analyze the performance of the program per force type calculation. By
-    individually studying each of the implemented force types, a deeper understanding can be gained. A range of 
-    systems of different size will be studied.
+    % In the following subsections, we will analyze the performance of the program per force type calculation. By
+    % individually studying each of the implemented force types, a deeper understanding can be gained. A range of 
+    % systems of different size will be studied.
 
+    In the following subsections, plots of the speedup in regard to the number of threads will be given. In order to 
+    make a fair assessment of the parallelization, this speedup is calculated relative to a proper sequential version
+    of this code rather than a parallel version run with a single thread. This way, overhead associated with ensuring
+    thread-safe memory access is also eliminated and the true performance of parallelization can be accurately assessed.
+    Note that the x-axis of these plots is in a logarithmic scale, to represent the speedup over the full
+    range of threads in a clear manner.
 
         \subsubsection{Electrostatic Interaction}
-        In Fig. \ref{fig:electro-speedup}, the speedup for a range of different systems is displayed. We can clearly
-        see a ... for small systems and ..... for larger systems
+        In Fig.~\ref{fig:electro-speedup}, a plot of the speedup of the electrostatic force calculations 
+        in regard to the number of threads is displayed for a range of different system sizes.
         \begin{figure}[H]
             \centering
             \includegraphics[width=\linewidth]{./images/electrostatic_scaling.png} % This creates a placeholder box with text
             \caption{Speedup of a range of systems containing only electrostatic interaction in function of the number 
-            of threads.}\label{fig:electro-speedup}
+            of threads}\label{fig:electro-speedup}
         \end{figure}
-
+        A clear speedup can be observed for all system sizes. For the smallest system sizes, a speedup is achieved by leveraging
+        multiple cores. However, this behavior only holds to a certain number of cores, after which there is a decrease
+        in the speedup to the point where the sequential version becomes more performant. When increasing the system
+        size, the parallelization is more scalable. In other words, more cores can be leveraged to achieve an even
+        greater speedup. For the largest system size of $25000$, the maximum speedup corresponds to the $64$ logical
+        cores that are available in the testing system. However, increasing the number of cores beyond this number
+        also decreases performance.
 
         \subsubsection{Dispersion Interaction}
-        In Fig. \ref{fig:dispersion-speedup}, the speedup for a range of different systems is displayed. We can clearly
-        see a ... for small systems and ..... for larger systems
+
+        In Fig.~\ref{fig:dispersion-speedup}, a plot of the speedup of the electrostatic force calculations 
+        in regard to the number of threads is displayed for a range of different system sizes.
         \begin{figure}[H]
             \centering
             \includegraphics[width=\linewidth]{./images/dispersion_scaling.png} % This creates a placeholder box with text
@@ -375,9 +457,16 @@ individual level.
             of threads.}\label{fig:dispersion-speedup}
         \end{figure}
 
+        The trends for the dispersion interaction are largely similar to the electrostatic interactions, given that
+        they iterate over the same interaction pairs. However, the maximum obtained speedup seems to be slightly
+        larger than the electrostatic interactions.
+
         \subsubsection{Bonded Interaction}
-        In Fig. \ref{fig:bonded-speedup}, the speedup for a range of different systems is displayed. We can clearly
-        see a ... for small systems and ..... for larger systems
+        In Fig.~\ref{fig:bonded-speedup}, a plot of the speedup of the electrostatic force calculations 
+        in regard to the number of threads is displayed for a range of different system sizes. In 
+        Fig~\ref{fig:bonded2-speedup}, a similar benchmark is displayed, but for larger system sizes and smaller
+        number of threads.
+
         \begin{figure}[H]
             \centering
             \includegraphics[width=\linewidth]{./images/bonds_scaling.png} % This creates a placeholder box with text
@@ -391,12 +480,46 @@ individual level.
             of threads.}\label{fig:bonded2-speedup}
         \end{figure}
     
+        Here we see no significant performance increase for the parallelization of the bonded forces. There is no
+        clear trend over the system sizes, but we can note that the smaller system sizes seem to drop in performance
+        slightly less steeply than the larger system sizes.
+
+
     \subsection{Nested Parallelization}
     In this subsection, the nested parallelism over the different force types will be studied. To be honest this will
     be a bit more complicated to write about, or too simple to write much about, not sure yet. Let's discuss this
     after we get the results
 
 \section{Discussion}
+We can clearly see the best speedup and scaling for non-bonded interactions (i.e.\ the electrostatic forces and 
+the dispersion forces). This because of this collapsed double loop, which drastically increases the amount of
+work per thread. As illustrated in Fig~\ref{fig:dispersion-speedup} and Fig~\ref{fig:electro-speedup}, small system
+sizes only experience a speedup up to a limited number of cores. This is because a balance has to be found between
+the overhead associated with managing multiple threads and the performance gain. As the number of cores is increased,
+the overhead increases to the point where there is no performance gain with regard to the sequential code. As the
+system size is increased, the amount of work that can be split over the threads also increases. Subsequently, the
+overhead associated with managing these threads is also spread out more. This is the reason why the larger system
+sizes experience performance gains for a larger number of threads. Note that the number of threads that correspond
+to the largest performance gain corresponds to the number of logical cores in the system. Beyond this point, the
+parallelism does not really increase anymore, because only concurrency is achieved. 
+
+
+In contract to the non-bonded forces, the bonded forces are not subject to the double loop over the particles. Here,
+no performance speedup is observed at all. The amount of work per thread is just not enough to justify the overhead
+associated with managing the threads. 
+
+It is important to note that all of these
+interactions are SIMD calculations. So while they are very effectively scaled up by means of a CPU, it is very likely
+that a GPU would be able to accomplish even better performance (given its inherent aptitude to SIMD instructions). 
+In the field of molecular modeling, it has frequently been shown that GPU processing gives the best performance [citation needed].
+
+\section{Conclusion}
+Overall, Section~\ref{res} makes it clear that the nonbonded interactions are ideal for parallelization. It is likely
+that further increases could be achieved by using GPU to more efficiently process these SIMD processes. However,
+even further advances could be made when leveraging a spatial decomposition technique in conjunction with a hybrid
+CPU/GPU architecture. These spatial decomposition (like adaptive Fast Multipole Method or Barnes-Hut) techniques would be 
+highly suited to CPU parallelization because of the irregular branching, adaptive recursion and non-uniform memory
+access patterns. 
 
 
 
