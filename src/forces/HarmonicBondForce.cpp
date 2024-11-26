@@ -14,66 +14,48 @@ void HarmonicBondForce::addBond(size_t particle1Index, size_t particle2Index) {
     bonds.emplace_back(particle1Index, particle2Index);
 }
 
+void HarmonicBondForce::compute(System& system, std::vector<std::array<double, 3>>& forces) const {
+    for (const auto& bond : bonds) {
+        size_t i = bond.first;
+        size_t j = bond.second;
 
-void HarmonicBondForce::compute(System& system, 
-                                            std::vector<std::array<double, 3>>& forces,
-                                            ThreadManager& thread_manager,
-                                            Chronometer& chronometer) const {
+        Particle& particle1 = system.getParticle(i);
+        Particle& particle2 = system.getParticle(j);
 
-    int num_threads = thread_manager.harmonic_bond_threads;
-    size_t num_bonds = bonds.size();
-    // printf("num_bonds: %ld\n", num_bonds);
-    size_t num_particles = forces.size();
-    // printf("num_particles: %ld\n", num_particles);
+        const std::array<double, 3>& pos1 = particle1.getPosition();
+        const std::array<double, 3>& pos2 = particle2.getPosition();
 
+        // Calculate the distance vector and its magnitude
+        std::array<double, 3> r = {0.0, 0.0, 0.0};
+        double rSquared = 0.0;
 
-    std::vector<std::vector<std::array<double, 3>>> local_forces(num_threads, 
-    std::vector<std::array<double, 3>>(forces.size(), {0.0, 0.0, 0.0}));
+        // Calculate displacement vector and squared distance
+        for (int k = 0; k < 3; ++k) {
+            r[k] = pos2[k] - pos1[k];
+            rSquared += r[k] * r[k];
+        }
 
+        // Calculate actual distance between particles
+        double rMagnitude = std::sqrt(rSquared);
 
-    for (size_t bondIdx = 0; bondIdx < num_bonds; ++bondIdx) {
+        // Skip if particles are at the same position to avoid division by zero
+        if (rMagnitude < 1e-10) continue;
 
-        double z = 2.0;
-        const auto& bond = bonds[bondIdx];
-        size_t particle1_index = bond.first;
-        size_t particle2_index = bond.second;
+        // Calculate the force using the harmonic potential formula:
+        // F = -k(r - r₀)r̂
+        // where k is the spring constant, r is the current distance,
+        // r₀ is the equilibrium distance, and r̂ is the unit vector
+        double deltaR = rMagnitude - equilibriumDistance;
+        double forceMagnitude = springConstant * deltaR;
 
-        Particle& particle1 = system.getParticle(particle1_index);
-        Particle& particle2 = system.getParticle(particle2_index);
+        // Convert to force per component by multiplying by the normalized direction vector
+        for (int k = 0; k < 3; ++k) {
+            // Divide by rMagnitude to normalize the direction vector
+            double force = forceMagnitude * (r[k] / rMagnitude);
 
-        const std::array<double, 3>& particle1_pos = particle1.getPosition();
-        const std::array<double, 3>& particle2_pos = particle2.getPosition();
-
-        double dx = particle2_pos[0] - particle1_pos[0];
-        double dy = particle2_pos[1] - particle1_pos[1];
-        double dz = particle2_pos[2] - particle1_pos[2];
-
-        // Calculate distance between atoms
-        double distance_squared = dx*dx + dy*dy + dz*dz;
-        double distance = std::sqrt(distance_squared);
-
-        // Skip if atoms are too close to avoid division by zero
-        if (distance < 1e-10) continue;
-
-        // Calculate magnitude of harmonic force
-        double displacement = distance - equilibriumDistance;
-        double force_magnitude = springConstant * displacement;
-
-        // Calculate force components by scaling displacement vector
-        double force_scale = force_magnitude / distance;
-        double force_x = force_scale * dx;
-        double force_y = force_scale * dy;
-        double force_z = force_scale * dz;
-
-        // Accumulate forces in thread-local storage
-        // Force on atom1
-        forces[particle1_index][0] -= force_x;
-        forces[particle1_index][1] -= force_y;
-        forces[particle1_index][2] -= force_z;
-
-        forces[particle2_index][0] += force_x;
-        forces[particle2_index][1] += force_y;
-        forces[particle2_index][2] += force_z;
-
+            // Apply equal and opposite forces to both particles (Newton's Third Law)
+            forces[i][k] += force;  // Force on particle i
+            forces[j][k] -= force;  // Equal and opposite force on particle j
+        }
     }
 }

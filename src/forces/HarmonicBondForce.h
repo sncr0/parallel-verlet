@@ -25,13 +25,14 @@ public:
      * @param system - The system containing particles.
      * @param forces - A reference to the forces array to update.
      */
-    void compute(System& system, std::vector<std::array<double, 3>>& forces, 
-                    ThreadManager& thread_manager,
-                    Chronometer& chronometer) const override;
+    void compute(System& system, std::vector<std::array<double, 3>>& forces)//, 
+                    // ThreadManager& thread_manager,
+                    // Chronometer& chronometer) 
+                    const override;
 
-    void compute_parallel(System& system, std::vector<std::array<double, 3>>& forces, 
-                            ThreadManager& thread_manager,
-                            Chronometer& chronometer) const override;
+    // void compute_parallel(System& system, std::vector<std::array<double, 3>>& forces, 
+    //                         ThreadManager& thread_manager,
+    //                         Chronometer& chronometer) const override;
                             
 private:
     double springConstant;
