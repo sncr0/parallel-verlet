@@ -58,6 +58,7 @@ void LennardJonesForce::compute_parallel(System& system, std::vector<std::array<
         #pragma omp for collapse(2)
         for (size_t particle1_index = 0; particle1_index < num_particles; ++particle1_index) {
             for (size_t particle2_index = particle1_index + 1; particle2_index < num_particles; ++particle2_index) {
+                std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
                 Particle& particle1 = system.getParticle(particle1_index);
                 Particle& particle2 = system.getParticle(particle2_index);
 
@@ -98,6 +99,10 @@ void LennardJonesForce::compute_parallel(System& system, std::vector<std::array<
                 thread_local_forces_x[particle2_index] += force_x;
                 thread_local_forces_y[particle2_index] += force_y;
                 thread_local_forces_z[particle2_index] += force_z;
+
+                std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+                auto time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+                printf("Time to compute forces: %ld\n", time_span.count());
 
                 VERBOSE("forces: %f %f %f\n", force_x, force_y, force_z);
                 VERBOSE("positions 1: %f %f %f\n", particle1_pos[0], particle1_pos[1], particle1_pos[2]);
