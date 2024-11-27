@@ -533,9 +533,22 @@ range of threads in a clear manner.
         of threads.}\label{fig:bonded2-speedup}
     \end{figure}
 
-    Here we see no significant performance increase for the parallelization of the bonded forces. There is no
-    clear trend over the system sizes, but we can note that the smaller system sizes seem to drop in performance
-    slightly less steeply than the larger system sizes.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\linewidth]{./images/bonds_scaling.png} % This creates a placeholder box with text
+            \caption{Speedup of a range of systems containing only bonded interaction in function of the number 
+            of threads.}\label{fig:bonded-speedup}
+        \end{figure}
+        \begin{figure}[H]
+            \centering-
+            \includegraphics[width=\linewidth]{./images/bonds2_scaling.png} % This creates a placeholder box with text
+            \caption{Speedup of a range of systems containing only bonded interaction in function of the number 
+            of threads.}\label{fig:bonded2-speedup}
+        \end{figure}
+    
+        Here we see no significant performance increase for the parallelization of the bonded forces. There is no
+        clear trend over the system sizes, but we can note that the smaller system sizes seem to drop in performance
+        slightly less steeply than the larger system sizes.
 
     % Additionally, some manual benchmarking was done to calculate the time spent per bond. This
     % seemed to be quite independent of the system size, and resulted in a maximum time spent on a single bond 
@@ -624,8 +637,8 @@ according to Amdahl's law.
 
 It is important to note that all of these
 interactions are SIMD calculations. So while they are very effectively scaled up by means of a CPU, it is very likely
-that a GPU would be able to accomplish even better performance (given its inherent aptitude to SIMD instructions). 
-In the field of molecular modeling, it has frequently been shown that GPU processing gives the best performance.~\cite{eastman2010openmm}
+that a GPU would be able to accomplish even better performance\cite{friedrichs2009accelerating} (given its inherent aptitude to SIMD instructions). 
+In the field of molecular modeling, it has frequently been shown that GPU processing gives the best performance [citation needed].
 
 \section{Conclusion}
 A molecular dynamics simulation engine is a clear ideal candidate for parallelization. A clearly scalable
