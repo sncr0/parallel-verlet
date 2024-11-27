@@ -296,7 +296,10 @@ efficient computation without sacrificing accuracy in simulations of large molec
         Each of the processors is responsible for simulating the behavior of the particles in that region. One of the main
         challenges of this approach is how the interfaces between the subdivisions are handled. Many approaches
         leverage the fast multipole algorithm propsed by Greengard and Rothkin~\cite{greengard1987fast}. Other approaches
-        could include the Barnes-Hut algorithm~\cite{barnes1986hierarchical}.
+        could include the Barnes-Hut algorithm~\cite{barnes1986hierarchical}. These spatial decomposition 
+        techniques are highly suited to CPU parallelization because of the irregular branching, adaptive recursion and 
+        non-uniform memory
+        access patterns. 
 
         \subsubsection{Neighbor Lists}
         Neighbor list is another spatial decomposition approach that can be used to parallelize MD simulations. The
@@ -532,6 +535,13 @@ thread-safe memory access is also eliminated and the true performance of paralle
 
 \section{Discussion}
 \subsection{Non-bonded Interactions}
+
+Leveraging the skew-symmetric
+force matrix, it is possible to eliminate a large section of the particle pairs that normally would be iterated
+over. However, this results in a non-rectangular loop, which normally would not result in a uniform load balance.
+However, because of the \verb|collapse(2)| cause, a uniform load balance is achieved after all. This was also
+clearly observed during the development stage, where the timings for all threads were very uniform.
+
 We can clearly see the best speedup and scaling for non-bonded interactions (i.e.\ the electrostatic forces and 
 the dispersion forces). This because of this collapsed double loop, which drastically increases the amount of
 work per thread. As illustrated in Fig~\ref{fig:dispersion-speedup} and Fig~\ref{fig:electro-speedup}, small system
@@ -555,6 +565,8 @@ that merges these thread-local forces back into the global force array in a thre
 was observed to be more performant. An alternative could be a reduction clause on these force arrays, but attempts to
 implement this were not successful (even though it may be even more performant than the approach with the critical
 section).
+
+
 
 Even though Amdahl's law is a theoretical concept, it could help give further insight into the behavior of the
 program. More specifically, it could give some insight to how much of the runtime is spent on performing
@@ -588,20 +600,28 @@ These vectors (e.g.\ the vector containing the positions of the atoms) would con
 atoms, which would reduce the number of cache misses.
 
 \subsection{Bonded Interactions}
-In contract to the non-bonded forces, the bonded forces are not subject to the double loop over the particles. Here,
-no performance speedup is observed at all. The amount of work per thread is just not enough to justify the overhead
-associated with managing the threads. 
-
-Here again, the resolution of the clock of the computer is not fine enough to get insight 
-
-For all force type calculations that have been implemented in this application, a very uniform load balance can be
-achieved. This is because of the SIMD nature of these calculations. For the bonded forces, the load balance is 
+In contract to the non-bonded forces, the bonded forces are not subject to the double loop over the particles.
+The load balance is 
 uniform because the loop that is being parallelized performs the same calculation over all bonds present in the
-system. For the non-bonded interactions, the load balance is less trivial to assess. Leveraging the skew-symmetric
-force matrix, it is possible to eliminate a large section of the particle pairs that normally would be iterated
-over. However, this results in a non-rectangular loop, which normally would not result in a uniform load balance.
-However, because of the \verb|collapse(2)| cause, a uniform load balance is achieved after all. This was also
-clearly observed during the development stage, where the timings for all threads were very uniform.
+system.
+However,
+no performance speedup is observed at all. The amount of work per thread is just not enough to justify the overhead
+associated with managing the threads.
+
+Additionally, the resolution of the clock of the computer is again not fine enough to get insight into the parallelization
+according to Amdahl's law.
+
+
+
+
+% For all force type calculations that have been implemented in this application, a very uniform load balance can be
+% achieved. This is because of the SIMD nature of these calculations. For the bonded forces, the load balance is 
+% uniform because the loop that is being parallelized performs the same calculation over all bonds present in the
+% system. For the non-bonded interactions, the load balance is less trivial to assess. Leveraging the skew-symmetric
+% force matrix, it is possible to eliminate a large section of the particle pairs that normally would be iterated
+% over. However, this results in a non-rectangular loop, which normally would not result in a uniform load balance.
+% However, because of the \verb|collapse(2)| cause, a uniform load balance is achieved after all. This was also
+% clearly observed during the development stage, where the timings for all threads were very uniform.
 
 
 It is important to note that all of these
@@ -610,8 +630,33 @@ that a GPU would be able to accomplish even better performance (given its inhere
 In the field of molecular modeling, it has frequently been shown that GPU processing gives the best performance [citation needed].
 
 \section{Conclusion}
-Overall, Section~\ref{res} makes it clear that the non-bonded interactions are ideal for parallelization. It is likely
-that further increases could be achieved by using GPU to more efficiently process these SIMD processes. However,
+Molecular dynamics simulation engine is a clear ideal candidate for parallelization. A clearly scalable
+parallelization strategy was implemented for the calculations of non-bonded interactions of moderate to large system 
+sizes. From the data that was presented, it seems likely that increasing the number of cores in the system would 
+allow the strategy to scale even further beyond the systems sizes that were studied in this work. Further minor improvements
+could be made by adjusting the datastructures to allow for greater cache locality and implementing reduction clauses
+to potentially improve performance. More fundamental improvements are likely to be achievable by implementing more
+advanced parallelization strategies, such as those presented in the literature review. These would include atom-based
+decomposition techniques, force-based decomposition techniques and finally spatial decomposition techniques.
+Of this spatial decomposition technique category, an adaptive
+fast multipole method seems very likely to result in drastic performance increases with CPU parallelization (vide supra).
+
+The bonded
+interactions were not successfully parallelized with the proposed strategy. It seems plausible that increasing
+the system size would result in a better parallelization, but the data does not give the same indication. It could be 
+the case that the overhead incurred by parallelizing on a CPU does not weigh up to the performance gain on 
+systems sizes that are currently feasible to simulate.
+
+It is likely
+that further increases could be achieved both for non-bonded interactions and for bonded interactions 
+by using GPU to more efficiently parallelize these SIMD processes. Notably, a hybrid GPU/CPU 
+nested parallelism architecture could be
+leveraged to employ a spatial decomposition technique such as the fast multipole method. This technique could be
+parallelized on CPU, and then delegate the computations in the resulting subregions to a GPU-based parallelization
+approach similar to the approach proposed in this work.
+
+
+However,
 even further advances could be made when leveraging a spatial decomposition technique in conjunction with a hybrid
 CPU/GPU architecture. These spatial decomposition (like adaptive Fast Multipole Method or Barnes-Hut) techniques would be 
 highly suited to CPU parallelization because of the irregular branching, adaptive recursion and non-uniform memory
