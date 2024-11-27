@@ -279,7 +279,8 @@ efficient computation without sacrificing accuracy in simulations of large molec
 
 
 \section{Literature Review}
-    Molecular dynamics is a concept that is inherently very suited to parallelization. Because the forces that
+    Molecular dynamics is a concept that is inherently very suited to parallelization. There are multiple
+    MD engines that leverage parallelization, such as OpenMM.~\cite{eastman2010openmm} Because the forces that
     drive the behavior of the system are comprised of the sum of interactions between sets of particles, a parallelization
     can be performed over these interactions. Moreover, because the technique is inherently an approximative technique,
     there is lots of freedom to further optimize the calculations by using smart approximative algorithms. 
