@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
     int dispersion_force_threads = 0;
     int num_atoms = 1;
     int num_steps = 1;
+    int write_flag = 0;
 
     while ((c = getopt(argc, argv, "vh:e:n:d:s:")) != -1) {
         switch (c) {
@@ -99,95 +100,59 @@ int main(int argc, char **argv) {
                 }
                 break;
             }
+            case 'w':
+                write_flag = 1;
+                break;
             default:
                 std::cerr << "Unknown option: " << c << "\n";
                 return EXIT_FAILURE;
         }
     }
 
+    printf("Benchmarking dispersion interaction system\n");
     Chronometer chronometer;
-
-    // chronometer.start("system_creation");
     ThreadManager thread_manager(harmonic_bond_threads, dispersion_force_threads, electrostatic_bond_threads);
 
+    VERBOSE("Creating the system\n");
     System system;
-    // system.addParticle(1.0, 1.0, 0.0, 0.0, 0.0);
-    // system.addParticle(1.0, 1.0, 1.0, 1.0, 1.0);
 
-    // system.addParticle(1.0, 2.0, 2.0, 2.0);
-    // system.addParticle(1.0, 3.0, 3.0, 3.0);
     VerletIntegrator integrator(0.01, thread_manager, chronometer);
 
-    auto electrostatic_force = std::make_shared<ElectrostaticForce>(1.0);
-    electrostatic_force->num_threads = electrostatic_bond_threads;
-    // integrator.addForce(electrostatic_force);
-
+    VERBOSE("Adding forces to the system\n");
     auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
     ljForce->num_threads = dispersion_force_threads;
     integrator.addForce(ljForce);
 
-    // auto hbForce1 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
 
-
+    VERBOSE("Adding particles to the system\n");
     for (int i = 0; i < num_atoms; ++i) {
-        // Placing particles along a 1D line (e.g., x-axis)
-        // system.addParticle(1.0, 1.0, i * 3.0, 1.0, 0.0);  // (mass, x, y, z)
         int x = rand()%500;
         int y = rand()%500;
         int z = rand()%500;
-        // printf("x: %d, y: %d, z: %d\n", x, y, z);
-        system.addParticle(1.0, -1.0, x, y, z);  // (mass, x, y, z)
-        // system.addParticle(rand()%100, rand()%100, rand()%100, 1.0, 0.0);  // (mass, x, y, z)
-        // show coords:;
+        system.addParticle(1.0, -1.0, x, y, z);
+        VERBOSE("Particle %d added at position (%d, %d, %d)\n", i, x, y, z);
     }
-
-    // integrator.addForce(hbForce1);
-
-
-    // // auto ljForce = std::make_shared<LennardJonesForce>(0.1, 1.0);
-    // hbForce1->addBond(0, 1);
-
-
-
-    // auto hbForce2 = std::make_shared<HarmonicBondForce>(1.0, 1.0);
-    // hbForce2->addBond(2, 3);
-
-    // // integrator.addForce(ljForce);
-    // integrator.addForce(hbForce2);
 
     Context context(system, integrator);
 
-
-
-    // chronometer.end("system_creation");
-    // chronometer.printTiming("system_creation", "us");
-    // chronometer.printTimings();
     VERBOSE("Starting the simulation with %zu particles\n", system.getNumParticles());
 
-    // Run the simulation
-    // context.runSimulation(100000);
-    // XYZWriter trajectoryWriter("trajectory.xyz");
-
-    // Run the simulation and write trajectory
-    // const int numSteps = 1;
-    const int output_interval = 100; // Output every 100 steps
-
-    for (int step = 0; step < num_steps; ++step) {
-        // context.step();
-         context.runSimulation(1);
-        if (step % output_interval == 0) {
-            // trajectoryWriter.writeFrame(system); // Write the current frame
+    if (write_flag) {
+        VERBOSE("Writing trajectory to trajectory.xyz\n");
+        XYZWriter trajectoryWriter("trajectory.xyz");
+        const int output_interval = 100; // Output every 100 steps
+        for (int step = 0; step < num_steps; ++step) {
+            context.runSimulation(1);
+            if (step % output_interval == 0) {
+                trajectoryWriter.writeFrame(system); // Write the current frame
+            }
+        }
+        trajectoryWriter.close();
+    } else {
+        for (int step = 0; step < num_steps; ++step) {
+            context.runSimulation(1);
         }
     }
-
-    // Close the trajectory writer
-    // trajectoryWriter.close();
-// 
-    // Output the final positions of particles
-    // for (size_t i = 0; i < system.getNumParticles(); ++i) {
-    //     auto pos = system.getParticle(i).getPosition();
-    //     std::cout << "Particle " << i << " final position: (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")\n";
-    // }
 
     return 0;
 }
