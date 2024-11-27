@@ -240,7 +240,7 @@ efficient computation without sacrificing accuracy in simulations of large molec
     In general, there are two main approaches that can be taken to improve the performance of the
     simulation engine. Spatial decomposition techniques split the simulation space up and improve performance by
     processing these subregions in parallel. Force decomposition techniques are approximations based on physical grounds
-    that improve performance by reducing number of interaction pairs that need to be studies.
+    that improve performance by reducing number of interaction pairs that need to be studied.
 
     \subsection{Atom Decomposition}
     In this approach, each of the $P$ processors are assigned a group of $N/P$ atoms. These atoms do not necessarily
@@ -270,8 +270,20 @@ efficient computation without sacrificing accuracy in simulations of large molec
         -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
         \end{bmatrix}  
     \end{align*}
-    Each processor is responsible for a sub-block of $f$ of size $N/\sqrt{P} \times N/\sqrt{P}$.
-    This allows for a reduction of the communication cost from $O(N)$ to $O(N/\sqrt{P})$. 
+    Each processor is responsible for a sub-block of $f$ of size $N/\sqrt{P} \times N/\sqrt{P}$. This is graphically
+    illustrated in Fig~\ref{fig:force-decomp}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.35\linewidth]{images/force-decomp-graphic.png}
+        \caption{Graphical representation of the force decomposition strategy. Modified 
+        from Plimpton.~\cite{plimpton1995fast}}\label{fig:force-decomp}
+    \end{figure}
+    By permuting the force matrix $f$, the communication cost can be reduced from $O(N)$ to $O(N/\sqrt{P})$.
+    Additionally, this method also does not require geometric information about the system being studies. In fact,
+    to achieve better load balancing, it is better to randomize the atom ordering.~\cite{plimpton1995fast}
+
+
+
     \subsection{Spatial Decomposition Methods}
 
         \subsubsection{Domain Decomposition}
@@ -282,44 +294,48 @@ efficient computation without sacrificing accuracy in simulations of large molec
 
 
         Each of the processors is responsible for simulating the behavior of the particles in that region. One of the main
-        challenges of this approach is how the interfaces between the subdivisions are handled. 
+        challenges of this approach is how the interfaces between the subdivisions are handled. Many approaches
+        leverage the fast multipole algorithm propsed by Greengard and Rothkin~\cite{greengard1987fast}. Other approaches
+        could include the Barnes-Hut algorithm~\cite{barnes1986hierarchical}.
 
         \subsubsection{Neighbor Lists}
         Neighbor list is another spatial decomposition approach that can be used to parallelize MD simulations. The
         core idea is to maintain a list of potential interaction partners for each particle in the system. This
         significantly reduces the time complexity, given that the algorithm no longer needs to iterate over all
         atom pairs ($O(N)$), but only needs to iterate over the neighbor list for each particle ($O(N)$). These
-        techniques are especially relevant for short-range non-bonded interactions.
+        techniques are especially relevant for short-range non-bonded interactions. This technique is especially
+        suited to CPU, given that it is extremely challenging to coalesce the memory, which is required for efficient
+        GPU parallelization.~\cite{allen2017computer,verlet1967computer}
 
 
 
-    \subsection{Force Decomposition Methods}
-    % Because classical molecular dynamics are based on Newton's third law of motion, a skew-symmetric
-    % force matrix $f$ can be defined as follows
-    % \begin{align*}
-    %         f =
-    %         \begin{bmatrix}
-    %         0 & f_{12} & f_{13} & \cdots & f_{1N} \\
-    %         -f_{12} & 0 & f_{23} & \cdots & f_{2N} \\
-    %         -f_{13} & -f_{23} & 0 & \cdots & f_{3N} \\
-    %         \vdots & \vdots & \vdots & \ddots & \vdots \\
-    %         -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
-    %         \end{bmatrix}  
-    % \end{align*}
-    % of which only the upper or lower triangular portion needs to be calculated.
-    % This allows for decomposition based on the interactions between particle pairs. 
-    PME methods, .... not sure if this falls under the category of parallelization strategies, more like
-    algorithmic strategies I guess
+    % \subsection{Force Decomposition Methods}
+    % % Because classical molecular dynamics are based on Newton's third law of motion, a skew-symmetric
+    % % force matrix $f$ can be defined as follows
+    % % \begin{align*}
+    % %         f =
+    % %         \begin{bmatrix}
+    % %         0 & f_{12} & f_{13} & \cdots & f_{1N} \\
+    % %         -f_{12} & 0 & f_{23} & \cdots & f_{2N} \\
+    % %         -f_{13} & -f_{23} & 0 & \cdots & f_{3N} \\
+    % %         \vdots & \vdots & \vdots & \ddots & \vdots \\
+    % %         -f_{1N} & -f_{2N} & -f_{3N} & \cdots & 0
+    % %         \end{bmatrix}  
+    % % \end{align*}
+    % % of which only the upper or lower triangular portion needs to be calculated.
+    % % This allows for decomposition based on the interactions between particle pairs. 
+    % PME methods, .... not sure if this falls under the category of parallelization strategies, more like
+    % algorithmic strategies I guess
 
-    \subsubsection{Bonded Interactions}
-        \subsection{Particle Decomposition Methods}
-        \subsubsection{Atom Decomposition}
-        This approach generally uses systolic topology for interprocessor communication when replicated data is not 
-        possible in each processor
+    % \subsubsection{Bonded Interactions}
+    %     \subsection{Particle Decomposition Methods}
+    %     \subsubsection{Atom Decomposition}
+    %     This approach generally uses systolic topology for interprocessor communication when replicated data is not 
+    %     possible in each processor
 
-\subsection{Hybrid Parallelization Approaches}
+% \subsection{Hybrid Parallelization Approaches}
 
-\section{Parallelization}
+\section{Parallelization}\label{par}
 
 \subsection{Electrostatic Forces}
 In general, the non-bonded interactions (i.e.\ the electrostatic interaction and the dispersion interaction) usually
@@ -357,8 +373,7 @@ compute(system):
 \end{lstlisting}
 
 This loop is parallelized using a
-\verb|collapse(2)| clause, which can since deal with non-rectangular loops since OpenMP 5.1. Additionally, local 
-force arrays are created during the force 
+\verb|collapse(2)| clause, which can since deal with non-rectangular loops since OpenMP 5.1.
 \begin{lstlisting}
 compute(system):
     #pragma omp for collapse(2)
@@ -370,6 +385,8 @@ compute(system):
     #pragma omp critical
     - merge local force arrays
 \end{lstlisting}
+
+Note that thread-local force arrays are used during the calculations.
 
 Because this loop is collapsed, the work across the iterations is uniform. Therefore, no schedule was needed to 
 obtain optimal performance (which is not possible either way with a collapsed non-rectangular loop). Alternative setups 
@@ -410,22 +427,32 @@ Again, because of the uniform work across all the iterations of the loops, intro
 an increased performance due to the additional overhead.
 
 \section{Results}\label{res}
-In this section, the results of the parallelization strategies will be reported. In order to gain deeper insight into
-the performance of the program, a benchmark was performed on different levels of detail. This allows for a more
-comprehensive discussion about potential bottlenecks and areas for future work. More specifically, traditional
-metrics such as speedup and efficiency were employed to analyze the overall performance of the program. Besides this,
-more fine-grained benchmarking was done to gain more insight into how each of the force types performed on an
-individual level.
+In this section, the results of the parallelization strategies will be reported. The benchmarking was performed on the
+Crunchy 1 server, which contains a Four AMD Opteron 6272 (2.1 GHz) processor with 64 cores. Additionally, 256 GB of
+memory is available. All measurements were performed in triplicate and averaged out. In order to 
+make a fair assessment of the parallelization, this speedup is calculated relative to a proper sequential version
+of this code rather than a parallel version run with a single thread. This way, overhead associated with ensuring
+thread-safe memory access is also eliminated and the true performance of parallelization can be accurately assessed.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{./images/dag.png} % This creates a placeholder box with text
+    \caption{A direct acyclic graph illustrating the computations performed in the parallelized section of the code.
+    Note that the dashed line illustrates that this DAG is executed for multiple timesteps to simulate the 
+    behavior of the system.}\label{fig:dag}
+\end{figure}
+% In order to gain deeper insight into
+% the performance of the program, a benchmark was performed on different levels of detail. This allows for a more
+% comprehensive discussion about potential bottlenecks and areas for future work. More specifically, traditional
+% metrics such as speedup and efficiency were employed to analyze the overall performance of the program. Besides this,
+% more fine-grained benchmarking was done to gain more insight into how each of the force types performed on an
+% individual level.
 
     \subsection{Force Type Parallelization}
     % In the following subsections, we will analyze the performance of the program per force type calculation. By
     % individually studying each of the implemented force types, a deeper understanding can be gained. A range of 
     % systems of different size will be studied.
 
-    In the following subsections, plots of the speedup in regard to the number of threads will be given. In order to 
-    make a fair assessment of the parallelization, this speedup is calculated relative to a proper sequential version
-    of this code rather than a parallel version run with a single thread. This way, overhead associated with ensuring
-    thread-safe memory access is also eliminated and the true performance of parallelization can be accurately assessed.
+    In the following subsections, plots of the speedup in regard to the number of threads will be given. 
     Note that the x-axis of these plots is in a logarithmic scale, to represent the speedup over the full
     range of threads in a clear manner.
 
@@ -446,6 +473,10 @@ individual level.
         cores that are available in the testing system. However, increasing the number of cores beyond this number
         also decreases performance.
 
+        Additionally, some manual benchmarking was done to calculate the time spent per individual interaction. This
+        seemed to be quite independent of the system size, and resulted in a maximum time spent on an interaction 
+        around $400 ns$.
+
         \subsubsection{Dispersion Interaction}
 
         In Fig.~\ref{fig:dispersion-speedup}, a plot of the speedup of the electrostatic force calculations 
@@ -460,6 +491,11 @@ individual level.
         The trends for the dispersion interaction are largely similar to the electrostatic interactions, given that
         they iterate over the same interaction pairs. However, the maximum obtained speedup seems to be slightly
         larger than the electrostatic interactions.
+
+        Additionally, some manual benchmarking was done to calculate the time spent per individual interaction. This
+        seemed to be quite independent of the system size, and resulted in a maximum time spent on an interaction 
+        around $1000 ns$. Note that despite the increased complexity of this calculation, the time is more approximately
+        equal to that of an electrostatic interaction.
 
         \subsubsection{Bonded Interaction}
         In Fig.~\ref{fig:bonded-speedup}, a plot of the speedup of the electrostatic force calculations 
@@ -484,6 +520,10 @@ individual level.
         clear trend over the system sizes, but we can note that the smaller system sizes seem to drop in performance
         slightly less steeply than the larger system sizes.
 
+        Additionally, some manual benchmarking was done to calculate the time spent per bond. This
+        seemed to be quite independent of the system size, and resulted in a maximum time spent on a single bond 
+        around $1000 ns$. Note the similarity of the calculation time with the other force types.
+
 
     \subsection{Nested Parallelization}
     In this subsection, the nested parallelism over the different force types will be studied. To be honest this will
@@ -491,6 +531,7 @@ individual level.
     after we get the results
 
 \section{Discussion}
+\subsection{Non-bonded Interactions}
 We can clearly see the best speedup and scaling for non-bonded interactions (i.e.\ the electrostatic forces and 
 the dispersion forces). This because of this collapsed double loop, which drastically increases the amount of
 work per thread. As illustrated in Fig~\ref{fig:dispersion-speedup} and Fig~\ref{fig:electro-speedup}, small system
@@ -501,12 +542,67 @@ system size is increased, the amount of work that can be split over the threads 
 overhead associated with managing these threads is also spread out more. This is the reason why the larger system
 sizes experience performance gains for a larger number of threads. Note that the number of threads that correspond
 to the largest performance gain corresponds to the number of logical cores in the system. Beyond this point, the
-parallelism does not really increase anymore, because only concurrency is achieved. 
+parallelism does not really increase anymore, because only concurrency is achieved.
 
+As stated in Section~\ref{par}, the non-bonded force calculations make use of local force vectors to store the
+calculated forces per thread. Subsequently, a critical section is used to merge these local force vectors
+into the global vector. This was done for correctness and optimization purposes. It is entirely possible that two threads
+are working on two separate interactions that happen to involve a common particle (e.g.\ forces $f_{ij}$ and $f_{ik}$ both 
+involving particle $i$). If these two were to write to the global force vector, this would result in a race condition
+and an incorrect end result. In these physical simulations, that is of course not acceptable. To mitigate this, a
+locking data structure could potentially be used, but this proved not to be efficient. Instead, a critical section
+that merges these thread-local forces back into the global force array in a thread-safe manner 
+was observed to be more performant. An alternative could be a reduction clause on these force arrays, but attempts to
+implement this were not successful (even though it may be even more performant than the approach with the critical
+section).
 
+Even though Amdahl's law is a theoretical concept, it could help give further insight into the behavior of the
+program. More specifically, it could give some insight to how much of the runtime is spent on performing
+parallel calculations and how much is spent on the sequential part and the overhead.
+As stated in Section~\ref{res}, the maximum time measured for a single interaction was around $400 ns$ for both
+the electrostatic and dispersion interaction. Some calculations were made to try to estimate how much of the runtime
+of the program was spent on the parallel section:
+\begin{align*}
+    &\text{iterations} = \frac{n*(n-1)}{2}\\
+    &\text{time spend on parallel region} = \frac{\text{iterations}*400ns}{\text{num cores}}
+\end{align*} 
+However, it became clear that the resolution of the internal clock was much lower than what was required to accurately
+time the calculations for one interaction. Future work could bundle these interactions and average over the number
+per batch to get a better estimate. However, for this work, no theoretical estimate could be made on the ratio of
+time spent in the parallel to the sequential and overhead region.
+
+Unfortunately, the parallelization approach that was implemented is not guaranteed to have an optimal cache access behavior.
+Upon system creation, the atoms are stored in a vector of structs. However, the sequence of atom indices is also 
+contiguous in memory, which could provide some
+cache locality benefits during the execution. More specifically, it is possible that when bringing atom with index
+$i$ into memory, the atom with index $i+1$ is also brought into memory. Given that this atom with index $i+1$ is next
+in line for calculation, it could provide an optimal cache access. However, OpenMP does not support a scheduling
+strategy with the collapsed non-rectangular loops. Therefore, the scheduling is transparent to the programmer
+and could not result in an optimal memory access pattern. If the scheduling uses some sort of chunking, where
+a sequence of contiguous atoms are processes by the same processor, this locality would be exploited.
+
+Even more cache locality could be exploited if the data structure was changed from a vector of structs to a struct 
+of vectors. This is because that way, the cache locality is even more likely to improve due to better alignment of
+the data structures. More specifically, each vector would store a specific property of the atoms in a contiguous vector.
+These vectors (e.g.\ the vector containing the positions of the atoms) would contain the data of a larger number of
+atoms, which would reduce the number of cache misses.
+
+\subsection{Bonded Interactions}
 In contract to the non-bonded forces, the bonded forces are not subject to the double loop over the particles. Here,
 no performance speedup is observed at all. The amount of work per thread is just not enough to justify the overhead
 associated with managing the threads. 
+
+Here again, the resolution of the clock of the computer is not fine enough to get insight 
+
+For all force type calculations that have been implemented in this application, a very uniform load balance can be
+achieved. This is because of the SIMD nature of these calculations. For the bonded forces, the load balance is 
+uniform because the loop that is being parallelized performs the same calculation over all bonds present in the
+system. For the non-bonded interactions, the load balance is less trivial to assess. Leveraging the skew-symmetric
+force matrix, it is possible to eliminate a large section of the particle pairs that normally would be iterated
+over. However, this results in a non-rectangular loop, which normally would not result in a uniform load balance.
+However, because of the \verb|collapse(2)| cause, a uniform load balance is achieved after all. This was also
+clearly observed during the development stage, where the timings for all threads were very uniform.
+
 
 It is important to note that all of these
 interactions are SIMD calculations. So while they are very effectively scaled up by means of a CPU, it is very likely
@@ -514,7 +610,7 @@ that a GPU would be able to accomplish even better performance (given its inhere
 In the field of molecular modeling, it has frequently been shown that GPU processing gives the best performance [citation needed].
 
 \section{Conclusion}
-Overall, Section~\ref{res} makes it clear that the nonbonded interactions are ideal for parallelization. It is likely
+Overall, Section~\ref{res} makes it clear that the non-bonded interactions are ideal for parallelization. It is likely
 that further increases could be achieved by using GPU to more efficiently process these SIMD processes. However,
 even further advances could be made when leveraging a spatial decomposition technique in conjunction with a hybrid
 CPU/GPU architecture. These spatial decomposition (like adaptive Fast Multipole Method or Barnes-Hut) techniques would be 
