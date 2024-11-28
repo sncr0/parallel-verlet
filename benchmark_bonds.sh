@@ -31,8 +31,8 @@ for n in "${N_VALUES[@]}"; do
 
 
     # Run perf with repeats and capture elapsed times
-    perf_output=$(/usr/lib/linux-tools/5.15.0-126-generic/perf stat -e cache-misses,cache-references --repeat $REPEATS $EXECUTABLE -n $n -s 1 -h $e 2>&1)
-    # perf_output=$(perf stat -e cache-misses,cache-references --repeat $REPEATS $EXECUTABLE -n $n -s 1 -h $e 2>&1)
+    # perf_output=$(/usr/lib/linux-tools/5.15.0-126-generic/perf stat -e cache-misses,cache-references --repeat $REPEATS $EXECUTABLE -n $n -s 1 -h $e 2>&1)
+    perf_output=$(perf stat -e cache-misses,cache-references --repeat $REPEATS $EXECUTABLE -n $n -s 1 -h $e 2>&1)
 
     # Extract average elapsed time and append it to the grid
     avg_time=$(echo "$perf_output" | awk '/seconds user/ {sum += $1; count++} END {if (count > 0) print sum / count}')
