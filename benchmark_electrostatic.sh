@@ -13,7 +13,7 @@ perf='/usr/lib/linux-tools/5.15.0-126-generic/perf'
 EXECUTABLE="./bin/molecular_simulation"    # Path to your executable
 OUTPUT_FILE="results/data/${name}_benchmark_results.csv"   # CSV output file
 E_VALUES=(0 1 2 4 8 12 16 32 64 128 256)                      # Values for the -e flag (threads)
-N_VALUES=(1000 5000 10000 25000)                 # Values for the -n flag (size)
+N_VALUES=(1000 5000 10000 25000 50000 100000 1000000)                 # Values for the -n flag (size)
 REPEATS=3                                 # Number of repetitions per configuration
 
 # Initialize CSV file with headers

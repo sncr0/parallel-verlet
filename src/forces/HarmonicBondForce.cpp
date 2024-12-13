@@ -36,17 +36,24 @@ void HarmonicBondForce::compute_parallel(System& system,
             size_t particle1_index = bond.first;
             size_t particle2_index = bond.second;
 
-            Particle& particle1 = system.getParticle(particle1_index);
-            Particle& particle2 = system.getParticle(particle2_index);
-
-            const std::array<double, 3>& particle1_pos = particle1.getPosition();
-            const std::array<double, 3>& particle2_pos = particle2.getPosition();
+            const std::shared_ptr<const Particle> particle1 = system.getParticle(particle1_index);
+            const std::shared_ptr<const Particle> particle2 = system.getParticle(particle2_index);
 
             VERBOSE("Bond: %ld %ld\n", particle1_index, particle2_index);
 
-            double dx = particle2_pos[0] - particle1_pos[0];
-            double dy = particle2_pos[1] - particle1_pos[1];
-            double dz = particle2_pos[2] - particle1_pos[2];
+            const double& x1 = particle1->get_x_position();
+            const double& y1 = particle1->get_y_position();
+            const double& z1 = particle1->get_z_position();
+            const double& charge1 = particle1->get_charge();
+
+            const double& x2 = particle1->get_x_position();
+            const double& y2 = particle1->get_y_position();
+            const double& z2 = particle1->get_z_position();
+            const double& charge2 = particle2->get_charge();
+
+            double dx = x2 - x1;
+            double dy = y2 - y1;
+            double dz = z2 - z1;
             
             // Calculate distance between atoms
             double distance_squared = dx*dx + dy*dy + dz*dz;
@@ -97,17 +104,24 @@ void HarmonicBondForce::compute(System& system,
         size_t particle1_index = bond.first;
         size_t particle2_index = bond.second;
 
-        Particle& particle1 = system.getParticle(particle1_index);
-        Particle& particle2 = system.getParticle(particle2_index);
-
-        const std::array<double, 3>& particle1_pos = particle1.getPosition();
-        const std::array<double, 3>& particle2_pos = particle2.getPosition();
+        const std::shared_ptr<const Particle> particle1 = system.getParticle(particle1_index);
+        const std::shared_ptr<const Particle> particle2 = system.getParticle(particle2_index);
 
         VERBOSE("Bond: %ld %ld\n", particle1_index, particle2_index);
 
-        double dx = particle2_pos[0] - particle1_pos[0];
-        double dy = particle2_pos[1] - particle1_pos[1];
-        double dz = particle2_pos[2] - particle1_pos[2];
+        const double& x1 = particle1->get_x_position();
+        const double& y1 = particle1->get_y_position();
+        const double& z1 = particle1->get_z_position();
+        const double& charge1 = particle1->get_charge();
+
+        const double& x2 = particle1->get_x_position();
+        const double& y2 = particle1->get_y_position();
+        const double& z2 = particle1->get_z_position();
+        const double& charge2 = particle2->get_charge();
+
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double dz = z2 - z1;
 
         // Calculate distance between atoms
         double distance_squared = dx*dx + dy*dy + dz*dz;

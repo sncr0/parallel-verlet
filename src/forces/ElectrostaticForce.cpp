@@ -30,17 +30,22 @@ void ElectrostaticForce::compute_parallel(System& system,
         #pragma omp for collapse(2)
         for (size_t particle1_index = 0; particle1_index < num_particles; ++particle1_index) {
             for (size_t particle2_index = particle1_index + 1; particle2_index < num_particles; ++particle2_index) {
-                Particle& particle1 = system.getParticle(particle1_index);
-                Particle& particle2 = system.getParticle(particle2_index);
+                const std::shared_ptr<const Particle> particle1 = system.getParticle(particle1_index);
+                const std::shared_ptr<const Particle> particle2 = system.getParticle(particle2_index);
 
-                const std::array<double, 3>& particle1_pos = particle1.getPosition();
-                const std::array<double, 3>& particle2_pos = particle2.getPosition();
-                double charge1 = particle1.getCharge();
-                double charge2 = particle2.getCharge();
+                const double& x1 = particle1->get_x_position();
+                const double& y1 = particle1->get_y_position();
+                const double& z1 = particle1->get_z_position();
+                const double& charge1 = particle1->get_charge();
 
-                double dx = particle2_pos[0] - particle1_pos[0];
-                double dy = particle2_pos[1] - particle1_pos[1];
-                double dz = particle2_pos[2] - particle1_pos[2];
+                const double& x2 = particle1->get_x_position();
+                const double& y2 = particle1->get_y_position();
+                const double& z2 = particle1->get_z_position();
+                const double& charge2 = particle2->get_charge();
+
+                double dx = x2 - x1;
+                double dy = y2 - y1;
+                double dz = z2 - z1;
 
                 VERBOSE("Electrostatic nteraction: %ld %ld\n", particle1_index, particle2_index);
 
@@ -88,17 +93,22 @@ void ElectrostaticForce::compute(System& system,
 
     for (size_t particle1_index = 0; particle1_index < num_particles; ++particle1_index) {
         for (size_t particle2_index = particle1_index + 1; particle2_index < num_particles; ++particle2_index) {
-            Particle& particle1 = system.getParticle(particle1_index);
-            Particle& particle2 = system.getParticle(particle2_index);
+            const std::shared_ptr<const Particle> particle1 = system.getParticle(particle1_index);
+            const std::shared_ptr<const Particle> particle2 = system.getParticle(particle2_index);
 
-            const std::array<double, 3>& particle1_pos = particle1.getPosition();
-            const std::array<double, 3>& particle2_pos = particle2.getPosition();
-            double charge1 = particle1.getCharge();
-            double charge2 = particle2.getCharge();
+            const double& x1 = particle1->get_x_position();
+            const double& y1 = particle1->get_y_position();
+            const double& z1 = particle1->get_z_position();
+            const double& charge1 = particle1->get_charge();
 
-            double dx = particle2_pos[0] - particle1_pos[0];
-            double dy = particle2_pos[1] - particle1_pos[1];
-            double dz = particle2_pos[2] - particle1_pos[2];
+            const double& x2 = particle1->get_x_position();
+            const double& y2 = particle1->get_y_position();
+            const double& z2 = particle1->get_z_position();
+            const double& charge2 = particle2->get_charge();
+
+            double dx = x2 - x1;
+            double dy = y2 - y1;
+            double dz = z2 - z1;
 
             VERBOSE("Electrostatic nteraction: %ld %ld\n", particle1_index, particle2_index);
 

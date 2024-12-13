@@ -4,6 +4,7 @@
 #define SYSTEM_H
 
 #include "Particle.h"
+#include "ParticleData.h"
 #include <vector>
 #include <cstddef> 
 
@@ -12,14 +13,16 @@ public:
     System();
     ~System();
     
-    void addParticle(double mass, double charge, double x, double y, double z);
+    void addParticle(double mass, double charge, 
+                            double x, double y, double z,
+                            double vx=0, double vy=0, double vz=0);
     size_t getNumParticles() const;
-    Particle& getParticle(size_t index);    
-    const Particle& getParticle(size_t index) const;
+    std::shared_ptr<Particle> getParticle(size_t index);    
+    const std::shared_ptr<const Particle> getParticle(size_t index) const;
 
 
 private:
-    std::vector<Particle> particles;
+    ParticleData particle_data;
 };
 
 #endif

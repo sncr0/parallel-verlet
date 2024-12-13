@@ -6,18 +6,24 @@ System::System() {}
 
 System::~System() {}
 
-void System::addParticle(double mass, double charge, double x, double y, double z) {
-    particles.emplace_back(mass, charge, x, y, z, 0, 0, 0);
+void System::addParticle(double mass, double charge, 
+                            double x, double y, double z,
+                            double vx, double vy, double vz) {
+
+    particle_data.insertData(mass, charge, 
+                                x, y, z,
+                                vx, vy, vz);
+
 }
 
 size_t System::getNumParticles() const {
-    return particles.size();
+    return particle_data.getNumData();
 }
 
-Particle& System::getParticle(size_t index) {
-    return particles.at(index);
+std::shared_ptr<Particle> System::getParticle(size_t index) {
+    return particle_data.getParticle(index);
 }
 
-const Particle& System::getParticle(size_t index) const {
-    return particles.at(index); // Const version
+const std::shared_ptr<const Particle> System::getParticle(size_t index) const {
+    return particle_data.getParticle(index); // Const version
 }

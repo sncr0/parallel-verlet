@@ -69,10 +69,20 @@ void VerletIntegrator::step(System& system) {
    
     // Step 1: Update positions and half-step velocities using old forces
     for (size_t i = 0; i < numParticles; ++i) {
-        Particle& particle = system.getParticle(i);
-        auto pos = particle.getPosition();
-        auto vel = particle.getVelocity();
-        auto mass = particle.getMass();
+        std::shared_ptr<Particle> particle = system.getParticle(i);
+
+        const double& x_position = particle->get_x_position();
+        const double& y_position = particle->get_y_position();
+        const double& z_position = particle->get_z_position();
+
+        const double& x_velocity = particle->get_x_position();
+        const double& y_velocity = particle->get_y_position();
+        const double& z_velocity = particle->get_z_position();
+
+        const double& mass = particle->get_mass();
+
+        double pos[3] = {x_position, y_position, z_position};
+        double vel[3] = {x_velocity, y_velocity, z_velocity};
 
         for (int k = 0; k < 3; ++k) {
             // Update position using current velocity and old forces
@@ -80,8 +90,13 @@ void VerletIntegrator::step(System& system) {
             // First half of velocity update using old forces
             vel[k] += 0.5 * old_forces[i][k] * timestep / mass;
         }
-        particle.setPosition(pos[0], pos[1], pos[2]);
-        particle.setVelocity(vel[0], vel[1], vel[2]);
+        particle->set_x_position(pos[0]);
+        particle->set_y_position(pos[1]);
+        particle->set_z_position(pos[2]);
+
+        particle->set_x_velocity(vel[0]);
+        particle->set_y_velocity(vel[1]);
+        particle->set_z_velocity(vel[2]);
     }
 
     // Step 2: Calculate new forces at new positions
@@ -96,16 +111,22 @@ void VerletIntegrator::step(System& system) {
 
     // Step 3: Complete velocity update with new forces
     for (size_t i = 0; i < numParticles; ++i) {
-        Particle& particle = system.getParticle(i);
-        auto vel = particle.getVelocity();
-        auto mass = particle.getMass();
+        std::shared_ptr<Particle> particle = system.getParticle(i);
+        const double& x_velocity = particle->get_x_position();
+        const double& y_velocity = particle->get_y_position();
+        const double& z_velocity = particle->get_z_position();
 
+        const double& mass = particle->get_mass();
+
+        double vel[3] = {x_velocity, y_velocity, z_velocity};
         for (int k = 0; k < 3; ++k) {
             // Second half of velocity update using new forces
             vel[k] += 0.5 * new_forces[i][k] * timestep / mass;
         }
-        particle.setVelocity(vel[0], vel[1], vel[2]);
-    }
+
+        particle->set_x_velocity(vel[0]);
+        particle->set_y_velocity(vel[1]);
+        particle->set_z_velocity(vel[2]);    }
 
     // Store new forces for next timestep
     old_forces = new_forces;
